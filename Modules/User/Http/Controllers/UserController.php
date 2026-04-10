@@ -4,6 +4,7 @@ namespace Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\CanonicalRoleName;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,9 +15,6 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    /** Canonical role names (excludes legacy lowercase aliases). */
-    private const CANONICAL_ROLES = ['Admin', 'Lecturer', 'Programme Coordinator', 'Reviewer', 'Approver'];
-
     public function __construct(private readonly UserService $userService)
     {
     }
@@ -26,7 +24,10 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $users = $this->userService->paginated($request->only('search', 'role', 'faculty'));
-        $roles = Role::whereIn('name', self::CANONICAL_ROLES)->orderBy('name')->get();
+        $roles = Role::whereIn('name', CanonicalRoleName::all())
+            ->get()
+            ->sortBy(fn (Role $role): int => CanonicalRoleName::sortOrder($role->name))
+            ->values();
 
         return view('users.index', compact('users', 'roles'));
     }
@@ -45,7 +46,10 @@ class UserController extends Controller
         $this->authorize('update', $user);
 
         $users    = $this->userService->paginated(request()->only('search', 'role', 'faculty'));
-        $roles    = Role::whereIn('name', self::CANONICAL_ROLES)->orderBy('name')->get();
+        $roles    = Role::whereIn('name', CanonicalRoleName::all())
+            ->get()
+            ->sortBy(fn (Role $role): int => CanonicalRoleName::sortOrder($role->name))
+            ->values();
         $editUser = $user->load('roles');
 
         return view('users.index', compact('users', 'roles', 'editUser'));

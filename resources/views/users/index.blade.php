@@ -95,7 +95,7 @@
                             @if ($roleName)
                                 <span
                                     class="inline-flex items-center rounded-lg bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-800">
-                                    {{ $roleName }}
+                                    {{ \App\Support\CanonicalRoleName::normalize($roleName) }}
                                 </span>
                             @else
                                 <span class="text-sm text-red-300">—</span>
@@ -106,7 +106,7 @@
                                 @can('update', $u)
                                     @php
                                         $editData = $u->only(['id', 'name', 'email', 'staff_id', 'faculty']);
-                                        $editData['role'] = $u->roles->first()?->name ?? '';
+                                        $editData['role'] = \App\Support\CanonicalRoleName::normalize($u->roles->first()?->name ?? '');
                                     @endphp
                                     <button type="button" data-user='@json($editData)'
                                         onclick="userModal.openEdit(JSON.parse(this.dataset.user))"
@@ -287,7 +287,7 @@
     @if (isset($editUser))
         @php
             $editUserData = $editUser->only(['id', 'name', 'email', 'staff_id', 'faculty']);
-            $editUserData['role'] = $editUser->roles->first()?->name ?? '';
+            $editUserData['role'] = \App\Support\CanonicalRoleName::normalize($editUser->roles->first()?->name ?? '');
         @endphp
         <script>
             window.addEventListener('DOMContentLoaded', function() {

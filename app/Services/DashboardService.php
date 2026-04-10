@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\CanonicalRoleName;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +14,7 @@ use Modules\Workflow\Models\WorkflowInstance;
 
 class DashboardService
 {
-    private const CACHE_KEY = 'dashboard:overview:v1';
+    private const CACHE_KEY = 'dashboard:overview:v2';
     private const CACHE_TTL_MINUTES = 5;
 
     /**
@@ -52,8 +53,26 @@ class DashboardService
                 ? WorkflowApproval::query()
                     ->selectRaw('role_name, status, COUNT(*) as total')
                     ->groupBy('role_name', 'status')
-                    ->orderBy('role_name')
                     ->get()
+                    ->map(function (WorkflowApproval $approval): object {
+                        return (object) [
+                            'role_name' => $this->canonicalWorkflowRoleName((string) $approval->role_name),
+                            'status' => (string) $approval->status,
+                            'total' => (int) $approval->total,
+                        ];
+                    })
+                    ->groupBy(fn (object $row): string => $row->role_name . '|' . $row->status)
+                    ->map(function (Collection $rows): object {
+                        $first = $rows->first();
+
+                        return (object) [
+                            'role_name' => $first->role_name,
+                            'status' => $first->status,
+                            'total' => $rows->sum('total'),
+                        ];
+                    })
+                    ->sortBy(fn (object $row): string => str_pad((string) CanonicalRoleName::sortOrder($row->role_name), 2, '0', STR_PAD_LEFT) . '-' . $row->status)
+                    ->values()
                 : collect();
 
             return [
@@ -122,5 +141,10 @@ class DashboardService
             ->sortByDesc('at')
             ->take(10)
             ->values();
+    }
+
+    private function canonicalWorkflowRoleName(string $roleName): string
+    {
+        return CanonicalRoleName::normalize($roleName);
     }
 }
