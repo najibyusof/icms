@@ -19,6 +19,7 @@
         <div class="rounded-3xl border border-red-200/70 bg-white/80 p-6 shadow-xl shadow-red-100/40 backdrop-blur">
             <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
+                    <span class="sr-only">Academic Management System</span>
                     <p
                         class="inline-flex rounded-full bg-red-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
                         Dashboard Module

@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Modules\Course\Models\Course;
+use Modules\Course\Policies\CoursePolicy;
 use Modules\User\Policies\UserPolicy;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,5 +22,6 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useTailwind();
 
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Course::class, CoursePolicy::class);
     }
 }

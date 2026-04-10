@@ -47,6 +47,8 @@ class RbacSeeder extends Seeder
         'programme.create',
         'course.view',
         'course.create',
+        'course.update',
+        'course.submit',
         'group.view',
         'group.create',
         'workflow.view',

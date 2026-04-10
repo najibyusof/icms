@@ -13,6 +13,7 @@
         "laravel/fortify": "^1.36",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "maatwebsite/excel": "4.x-dev",
         "spatie/laravel-permission": "^7.3"
     },
     "require-dev": {
