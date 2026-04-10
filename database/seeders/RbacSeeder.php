@@ -40,6 +40,9 @@ class RbacSeeder extends Seeder
      */
     private array $permissions = [
         'user.view',
+        'user.create',
+        'user.update',
+        'user.delete',
         'programme.view',
         'programme.create',
         'course.view',
