@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
+
+@theme {
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+:root {
+    --brand-950: #2f0606;
+    --brand-900: #47090a;
+    --brand-800: #5f0f13;
+    --brand-700: #7e171d;
+    --brand-600: #9f212a;
+    --brand-500: #bf3039;
+    --brand-100: #fde8ea;
+    --surface: #fff8f8;
+}
+
+body {
+    background: radial-gradient(circle at 10% 10%, #ffe7e7 0%, #fff8f8 44%, #ffffff 100%);
+    color: #2d1416;
+}
