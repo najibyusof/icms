@@ -106,7 +106,9 @@
                                 @can('update', $u)
                                     @php
                                         $editData = $u->only(['id', 'name', 'email', 'staff_id', 'faculty']);
-                                        $editData['role'] = \App\Support\CanonicalRoleName::normalize($u->roles->first()?->name ?? '');
+                                        $editData['role'] = \App\Support\CanonicalRoleName::normalize(
+                                            $u->roles->first()?->name ?? '',
+                                        );
                                     @endphp
                                     <button type="button" data-user='@json($editData)'
                                         onclick="userModal.openEdit(JSON.parse(this.dataset.user))"
