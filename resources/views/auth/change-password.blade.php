@@ -2,8 +2,8 @@
 
 @section('content')
     <section class="mx-auto max-w-xl rounded-3xl border border-red-200 bg-white/95 p-8 shadow-xl shadow-red-200/60">
-        <h1 class="text-3xl font-extrabold text-red-950">Sign In</h1>
-        <p class="mt-3 text-sm text-red-900/70">Login with your email or staff ID and password.</p>
+        <h1 class="text-3xl font-extrabold text-red-950">Change Password</h1>
+        <p class="mt-3 text-sm text-red-900/70">Use a minimum of 8 characters and include at least one number.</p>
 
         @if (session('status'))
             <div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -11,20 +11,21 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login.store') }}" class="mt-8 space-y-5">
+        <form method="POST" action="{{ route('password.change.update') }}" class="mt-8 space-y-5">
             @csrf
+            @method('PUT')
 
             <div>
-                <label for="login" class="block text-sm font-semibold text-red-900">Email or Staff ID</label>
-                <input id="login" name="login" type="text" value="{{ old('login') }}" required autofocus
+                <label for="current_password" class="block text-sm font-semibold text-red-900">Current Password</label>
+                <input id="current_password" name="current_password" type="password" required
                     class="mt-2 w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-red-950 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-200" />
-                @error('login')
+                @error('current_password')
                     <p class="mt-2 text-sm text-red-700">{{ $message }}</p>
                 @enderror
             </div>
 
             <div>
-                <label for="password" class="block text-sm font-semibold text-red-900">Password</label>
+                <label for="password" class="block text-sm font-semibold text-red-900">New Password</label>
                 <input id="password" name="password" type="password" required
                     class="mt-2 w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-red-950 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-200" />
                 @error('password')
@@ -32,23 +33,17 @@
                 @enderror
             </div>
 
-            <label class="flex items-center gap-2 text-sm text-red-900/80">
-                <input type="checkbox" name="remember" value="1"
-                    class="rounded border-red-300 text-red-700 focus:ring-red-300" />
-                Remember me
-            </label>
+            <div>
+                <label for="password_confirmation" class="block text-sm font-semibold text-red-900">Confirm New
+                    Password</label>
+                <input id="password_confirmation" name="password_confirmation" type="password" required
+                    class="mt-2 w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-red-950 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-200" />
+            </div>
 
             <button type="submit"
                 class="w-full rounded-xl bg-red-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-800">
-                Login
+                Update Password
             </button>
         </form>
-
-        <div class="mt-6 flex items-center justify-between text-sm">
-            <a href="{{ route('password.request') }}"
-                class="font-semibold text-red-900 underline decoration-red-300 underline-offset-4">Forgot password?</a>
-
-            <span class="text-red-900/60">Use staff credentials assigned by admin.</span>
-        </div>
     </section>
 @endsection

@@ -19,6 +19,29 @@
         <div class="absolute -right-32 top-28 h-72 w-72 rounded-full bg-rose-300/60 blur-3xl"></div>
     </div>
 
+    <header class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+        <div
+            class="flex items-center justify-between rounded-2xl border border-red-200/70 bg-white/75 px-4 py-3 backdrop-blur">
+            <a href="{{ route('dashboard') }}" class="text-sm font-bold tracking-wide text-red-950">ICMS</a>
+
+            <div class="flex items-center gap-3 text-sm">
+                @auth
+                    <a href="{{ route('password.change') }}"
+                        class="rounded-lg border border-red-300 px-3 py-1.5 font-medium text-red-900 hover:bg-red-50">Change
+                        Password</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                            class="rounded-lg bg-red-900 px-3 py-1.5 font-medium text-white hover:bg-red-800">Logout</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}"
+                        class="rounded-lg bg-red-900 px-3 py-1.5 font-medium text-white hover:bg-red-800">Login</a>
+                @endauth
+            </div>
+        </div>
+    </header>
+
     <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         @yield('content')
     </main>

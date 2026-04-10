@@ -18,7 +18,7 @@ class SendWorkflowSubmittedNotifications implements ShouldQueue
 
     public function handle(WorkflowSubmitted $event): void
     {
-        $reviewers = User::role(['reviewer', 'approver'])->get();
+        $reviewers = User::role(['Reviewer', 'Approver', 'reviewer', 'approver'])->get();
 
         foreach ($reviewers as $reviewer) {
             $reviewer->notify(new WorkflowStatusNotification($event->workflow, 'Workflow Submitted'));

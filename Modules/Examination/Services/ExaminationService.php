@@ -27,8 +27,8 @@ class ExaminationService
     public function submit(SubmitExaminationDTO $dto): Examination
     {
         return DB::transaction(function () use ($dto): Examination {
-            $reviewer = User::role('reviewer')->firstOrFail();
-            $approver = User::role('approver')->firstOrFail();
+            $reviewer = User::role(['Reviewer', 'reviewer'])->firstOrFail();
+            $approver = User::role(['Approver', 'approver'])->firstOrFail();
 
             $examination = Examination::query()->create([
                 'course_id' => $dto->courseId,

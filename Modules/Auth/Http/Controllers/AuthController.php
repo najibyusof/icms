@@ -7,7 +7,7 @@ use Illuminate\Contracts\View\View;
 
 class AuthController extends Controller
 {
-    public function login(): View
+    public function create(): View
     {
         return view('auth.login');
     }

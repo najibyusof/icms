@@ -24,13 +24,13 @@ Enterprise-ready modular platform built with:
 ## Run Locally
 
 - Full dev stack (server + queue + Vite):
-  - `composer run dev`
+    - `composer run dev`
 - App only:
-  - `php artisan serve`
+    - `php artisan serve`
 - Queue worker only:
-  - `php artisan queue:work`
+    - `php artisan queue:work`
 - Frontend watcher only:
-  - `npm run dev`
+    - `npm run dev`
 
 Default local URLs:
 
