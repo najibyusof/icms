@@ -5,4 +5,5 @@ return [
     App\Providers\EventServiceProvider::class,
     App\Providers\FortifyServiceProvider::class,
     App\Providers\ModuleServiceProvider::class,
+    Modules\Group\Providers\GroupServiceProvider::class,
 ];
