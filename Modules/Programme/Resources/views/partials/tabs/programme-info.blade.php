@@ -32,7 +32,7 @@
                 <div class="d-flex justify-content-between">
                     <span>Active Status</span>
                     <strong>
-                        @if($programme->is_active)
+                        @if ($programme->is_active)
                             <span class="badge bg-success">Active</span>
                         @else
                             <span class="badge bg-secondary">Inactive</span>
@@ -43,7 +43,7 @@
         </ul>
 
         <h6 class="mt-4 mb-3">Programme Administration</h6>
-        @if($programme->programmeChair)
+        @if ($programme->programmeChair)
             <div class="card border-0 bg-light p-3">
                 <h6>Programme Chair</h6>
                 <p class="mb-0">

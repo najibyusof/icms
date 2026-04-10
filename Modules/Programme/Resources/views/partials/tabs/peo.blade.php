@@ -10,7 +10,7 @@
             @endcan
         </div>
 
-        @if($programme->programmePEOs->isNotEmpty())
+        @if ($programme->programmePEOs->isNotEmpty())
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -22,7 +22,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($programme->programmePEOs->sortBy('sequence_order') as $peo)
+                        @foreach ($programme->programmePEOs->sortBy('sequence_order') as $peo)
                             <tr>
                                 <td><span class="badge bg-light text-dark">{{ $peo->code }}</span></td>
                                 <td>{{ $peo->description }}</td>
@@ -30,12 +30,14 @@
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
                                         @can('update', $programme)
-                                            <button class="btn btn-outline-warning btn-sm" onclick="editPEO({{ $peo->id }})">
+                                            <button class="btn btn-outline-warning btn-sm"
+                                                onclick="editPEO({{ $peo->id }})">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                         @endcan
                                         @can('update', $programme)
-                                            <button class="btn btn-outline-danger btn-sm" onclick="deletePEO({{ $peo->id }})">
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                onclick="deletePEO({{ $peo->id }})">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         @endcan
@@ -75,7 +77,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="peo_order" class="form-label">Sequence Order</label>
-                        <input type="number" class="form-control" id="peo_order" name="sequence_order" min="1" required>
+                        <input type="number" class="form-control" id="peo_order" name="sequence_order" min="1"
+                            required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -88,45 +91,47 @@
 </div>
 
 <script>
-function savePEO(e) {
-    e.preventDefault();
-    const data = {
-        programme_id: {{ $programme->id }},
-        code: document.getElementById('peo_code').value,
-        description: document.getElementById('peo_desc').value,
-        sequence_order: document.getElementById('peo_order').value,
-    };
-    
-    fetch(`/programmes/{{ $programme->id }}/peos`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (d.success) {
-            alert(d.message);
-            location.reload();
-        }
-    });
-}
+    function savePEO(e) {
+        e.preventDefault();
+        const data = {
+            programme_id: {{ $programme->id }},
+            code: document.getElementById('peo_code').value,
+            description: document.getElementById('peo_desc').value,
+            sequence_order: document.getElementById('peo_order').value,
+        };
 
-function deletePEO(id) {
-    if (confirm('Are you sure?')) {
-        fetch(`/programmes/peos/${id}`, {
-            method: 'DELETE',
-            headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content}
-        })
-        .then(r => r.json())
-        .then(d => {
-            if (d.success) {
-                alert(d.message);
-                location.reload();
-            }
-        });
+        fetch(`/programmes/{{ $programme->id }}/peos`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    alert(d.message);
+                    location.reload();
+                }
+            });
     }
-}
+
+    function deletePEO(id) {
+        if (confirm('Are you sure?')) {
+            fetch(`/programmes/peos/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        alert(d.message);
+                        location.reload();
+                    }
+                });
+        }
+    }
 </script>

@@ -3,7 +3,7 @@
     <div class="col-12">
         <h5 class="mb-3">Courses in This Programme</h5>
 
-        @if($programme->courses->isNotEmpty())
+        @if ($programme->courses->isNotEmpty())
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -16,13 +16,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($programme->courses->sortBy('code') as $course)
+                        @foreach ($programme->courses->sortBy('code') as $course)
                             <tr>
                                 <td><span class="badge bg-light text-dark">{{ $course->code }}</span></td>
                                 <td><strong>{{ $course->name }}</strong></td>
                                 <td><span class="badge bg-secondary">{{ $course->credit_hours }}</span></td>
                                 <td>
-                                    @if($course->is_active)
+                                    @if ($course->is_active)
                                         <span class="badge bg-success">Active</span>
                                     @else
                                         <span class="badge bg-secondary">Inactive</span>
@@ -30,7 +30,7 @@
                                 </td>
                                 <td>
                                     <a href="#mapping" class="btn btn-sm btn-outline-primary" data-bs-toggle="tab"
-                                       onclick="filterCourseMapping({{ $course->id }})">
+                                        onclick="filterCourseMapping({{ $course->id }})">
                                         View Mappings
                                     </a>
                                 </td>

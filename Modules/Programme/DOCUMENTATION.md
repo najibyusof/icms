@@ -51,17 +51,18 @@ Modules/Programme/
 
 ### Key Tables Created (Migration: 2026_04_11_000000)
 
-| Table | Purpose | Key Fields |
-|-------|---------|-----------|
-| `programmes` | Main programme records | code, name, level, duration_semesters, status, programme_chair_id |
-| `programme_plos` | Programme Learning Outcomes | code, description, sequence_order |
-| `programme_peos` | Programme Educational Objectives | code, description, sequence_order |
-| `programme_courses` | Programme-course mappings | year, semester, is_mandatory |
-| `study_plans` | Study plan definitions | name, total_years, semesters_per_year |
-| `study_plan_courses` | Courses in study plans | year, semester, is_mandatory |
-| `clo_plo_mappings` | CLO-PLO alignments | clo_code, bloom_level (1-6), alignment_notes |
+| Table                | Purpose                          | Key Fields                                                        |
+| -------------------- | -------------------------------- | ----------------------------------------------------------------- |
+| `programmes`         | Main programme records           | code, name, level, duration_semesters, status, programme_chair_id |
+| `programme_plos`     | Programme Learning Outcomes      | code, description, sequence_order                                 |
+| `programme_peos`     | Programme Educational Objectives | code, description, sequence_order                                 |
+| `programme_courses`  | Programme-course mappings        | year, semester, is_mandatory                                      |
+| `study_plans`        | Study plan definitions           | name, total_years, semesters_per_year                             |
+| `study_plan_courses` | Courses in study plans           | year, semester, is_mandatory                                      |
+| `clo_plo_mappings`   | CLO-PLO alignments               | clo_code, bloom_level (1-6), alignment_notes                      |
 
 ### Programme Statuses
+
 - `draft` - Not yet submitted
 - `submitted` - Awaiting review
 - `in_review` - Currently being reviewed
@@ -71,12 +72,14 @@ Modules/Programme/
 ## Features
 
 ### ✅ Core CRUD Operations
+
 - Create, read, update, delete programmes
 - Manage PLOs (e.g., "Apply programming skills")
 - Manage PEOs (e.g., "Pursue professional IT careers")
 - Create and manage multiple study plans per programme
 
 ### ✅ Study Plans with Year & Semester Support
+
 ```php
 $studyPlan = StudyPlan::create([
     'programme_id' => 1,
@@ -95,7 +98,9 @@ $studyPlan->courses()->create([
 ```
 
 ### ✅ CLO-PLO Mapping with Bloom's Taxonomy
+
 Map Course Learning Outcomes to Programme Learning Outcomes with 6 levels:
+
 1. **Remember** - Recall facts and basic concepts
 2. **Understand** - Explain ideas or concepts
 3. **Apply** - Use information in new situations
@@ -114,6 +119,7 @@ CLOPLOMapping::create([
 ```
 
 ### ✅ Programme Chair Assignment
+
 ```php
 $programme->assign ProgrammeChair($user);
 // Or via API:
@@ -121,6 +127,7 @@ POST /programmes/{programme}/assign-chair/{userId}
 ```
 
 ### ✅ Approval Workflow
+
 ```php
 // Submit for approval
 POST /programmes/{programme}/submit-for-approval
@@ -130,6 +137,7 @@ POST /programmes/{programme}/submit-for-approval
 ```
 
 ### ✅ Reporting & Analytics
+
 ```php
 // CLO Coverage percentage
 $coverage = $mappingService->getCLOCoveragePercentage($programme);
@@ -160,6 +168,7 @@ GET         /programmes/{programme}/edit                  # Edit form
 ```
 
 ### PLOs (Programme Learning Outcomes)
+
 ```
 POST        /programmes/{programme}/plos                  # Create
 PUT         /programmes/plos/{plo}                        # Update
@@ -167,6 +176,7 @@ DELETE      /programmes/plos/{plo}                        # Delete
 ```
 
 ### PEOs (Programme Educational Objectives)
+
 ```
 POST        /programmes/{programme}/peos                  # Create
 PUT         /programmes/peos/{peo}                        # Update
@@ -174,6 +184,7 @@ DELETE      /programmes/peos/{peo}                        # Delete
 ```
 
 ### Study Plans
+
 ```
 POST        /programmes/{programme}/study-plans           # Create
 PUT         /programmes/study-plans/{studyPlan}          # Update
@@ -182,6 +193,7 @@ GET         /programmes/study-plans/{studyPlan}/courses  # Get courses by semest
 ```
 
 ### CLO-PLO Mappings
+
 ```
 POST        /programmes/mappings                          # Create mapping
 GET         /programmes/{programme}/mappings/courses/{courseId}
@@ -191,6 +203,7 @@ GET         /programmes/{programme}/mappings/coverage     # Get coverage report
 ```
 
 ### Chair & Workflow
+
 ```
 POST        /programmes/{programme}/assign-chair/{userId} # Assign chair
 POST        /programmes/{programme}/submit-for-approval    # Submit for approval
@@ -201,37 +214,44 @@ POST        /programmes/{programme}/submit-for-approval    # Submit for approval
 The `show` view (programme detail) features 7 interactive tabs:
 
 ### 1. **Main Info Tab**
+
 - Basic programme details (code, name, level, duration)
 - Quick statistics dashboard
 - Status badge and chair information
 
 ### 2. **Programme Info Tab**
+
 - Detailed description and requirements
 - Accreditation body
 - Links to related objects (courses, PLOs, etc.)
 
 ### 3. **PEO Tab** (Programme Educational Objectives)
+
 - List of PEOs with inline add/edit/delete modals
 - Sequence ordering
 - Professional outcome statements
 
 ### 4. **PLO Tab** (Programme Learning Outcomes)
+
 - List of PLOs with inline management
 - Sequence ordering
 - Learning outcome descriptions
 
 ### 5. **Courses Tab**
+
 - All courses assigned to the programme
 - Credit hours display
 - Links to view course-specific mappings
 
 ### 6. **Study Plan Tab**
+
 - Create and manage multiple study plans
 - Defined years and semesters per year
 - View courses for each plan
 - Card-based interface for easy scanning
 
 ### 7. **CLO-PLO Mapping Tab**
+
 - Interactive mapping table
 - Course ↔ CLO ↔ PLO ↔ Bloom Level
 - Inline modals for creating/deleting mappings
@@ -298,6 +318,7 @@ $service->deleteMapping($mapping);
 ## Usage Examples
 
 ### Example 1: Create Programme with PLOs
+
 ```php
 use Modules\Programme\Services\ProgrammeService;
 
@@ -320,6 +341,7 @@ $service->createPLO($programme, [
 ```
 
 ### Example 2: Create Study Plan with Courses
+
 ```php
 $studyPlan = $service->createStudyPlan($programme, [
     'name' => 'Standard Plan',
@@ -333,6 +355,7 @@ $studyPlan = $service->createStudyPlan($programme, [
 ```
 
 ### Example 3: Map CLO to PLO
+
 ```php
 use Modules\Programme\Services\MappingService;
 
@@ -348,6 +371,7 @@ $mapping = $mappingService->createOrUpdateMapping([
 ```
 
 ### Example 4: Generate Coverage Report
+
 ```php
 $coverage = $mappingService->getCLOCoveragePercentage($programme);
 // Returns: 75.5 (percentage of CLOs mapped to PLOs)
@@ -380,12 +404,15 @@ Users can perform operations based on their roles and permissions.
 ## Testing
 
 ### Seeder
+
 Run the test seeder to populate sample data:
+
 ```bash
 php artisan db:seed --class=ProgrammeManagementSeeder
 ```
 
 ### Manual Testing Checklist
+
 - [ ] Create a new programme
 - [ ] Add PLOs and PEOs
 - [ ] Create a study plan with year/semester structure
@@ -401,23 +428,27 @@ php artisan db:seed --class=ProgrammeManagementSeeder
 ## Modern UI Features
 
 ✨ **Responsive Design**
+
 - Mobile-friendly Bootstrap 5 interface
 - Collapsible mobile navigation
 - Touch-friendly buttons and modals
 
 ✨ **Interactive Elements**
+
 - Inline add/edit/delete with modals
 - Tab-based navigation for complex data
 - Live form validation
 - Badge-based status visualization
 
 ✨ **Data Presentation**
+
 - Summary statistics dashboard
 - Color-coded status badges
 - Grouped/sorted tables
 - Card-based layouts for visual scanning
 
 ✨ **User Experience**
+
 - Breadcrumb navigation
 - Contextual help text
 - Confirmation dialogs for destructive actions
@@ -443,6 +474,7 @@ php artisan db:seed --class=ProgrammeManagementSeeder
 ## Support
 
 For issues or questions about the Programme Management module, refer to:
+
 1. [Laravel Documentation](https://laravel.com/docs)
 2. [Spatie Laravel Permission](https://spatie.be/docs/laravel-permission)
 3. [Bootstrap 5 Components](https://getbootstrap.com/docs/5.0/components)

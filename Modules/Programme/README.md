@@ -5,9 +5,10 @@
 A complete **Programme Management System** for ICMS with:
 
 ### ✅ Core Features
+
 - ✓ Full CRUD for academic programmes
 - ✓ Programme Learning Outcomes (PLOs) management
-- ✓ Programme Educational Objectives (PEOs) management  
+- ✓ Programme Educational Objectives (PEOs) management
 - ✓ Study plans with year & semester structure
 - ✓ CLO-PLO mapping with Bloom's taxonomy (6 levels)
 - ✓ Programme chair assignment
@@ -15,6 +16,7 @@ A complete **Programme Management System** for ICMS with:
 - ✓ CLO coverage reporting
 
 ### ✅ Technology Stack
+
 - **Models**: 7 new models with relationships
 - **Services**: 2 comprehensive services (30+ methods)
 - **Controller**: 30+ endpoints
@@ -23,6 +25,7 @@ A complete **Programme Management System** for ICMS with:
 - **Database**: 7 new tables via single migration
 
 ### ✅ User Interface
+
 - Multi-tab programme detail page
 - Modern Bootstrap 5 responsive design
 - Inline modals for CRUD operations
@@ -33,11 +36,13 @@ A complete **Programme Management System** for ICMS with:
 ## 🚀 Getting Started
 
 ### Access the Module
+
 ```
 URL: /programmes
 ```
 
 ### Create First Programme
+
 1. Click **Programmes** in main menu
 2. Click **Create Programme** button
 3. Fill in basic info (code, name, level, duration)
@@ -45,12 +50,14 @@ URL: /programmes
 5. You'll be redirected to the programme detail page
 
 ### Add Learning Outcomes
+
 1. Go to PLO tab → Click **Add PLO**
 2. Enter code, description, sequence order
 3. Click **Save PLO**
 4. Repeat for PEOs in the PEO tab
 
 ### Create Study Plan
+
 1. Go to **Study Plan** tab
 2. Click **Create Study Plan**
 3. Enter name, years, semesters/year
@@ -58,6 +65,7 @@ URL: /programmes
 5. Add courses in the courses section
 
 ### Map CLOs to PLOs
+
 1. Go to **CLO-PLO Mapping** tab
 2. Click **Add Mapping**
 3. Select course, PLO, CLO code, Bloom level
@@ -65,11 +73,13 @@ URL: /programmes
 5. Click **Create Mapping**
 
 ### Assign Programme Chair
+
 1. Edit the programme
 2. Select a user from **Programme Chair** dropdown
 3. Click **Update Programme**
 
 ### Submit for Approval
+
 1. On programme detail page, click **Submit for Approval**
 2. Programme transitions from Draft → Submitted
 3. Can be reviewed and approved by authorized users
@@ -77,6 +87,7 @@ URL: /programmes
 ## 📊 Key Statistics Available
 
 On the programme detail page, you'll see quick stats:
+
 - **Total Courses**: Linked courses
 - **PLOs**: Programme Learning Outcomes
 - **PEOs**: Programme Educational Outcomes
@@ -86,57 +97,67 @@ On the programme detail page, you'll see quick stats:
 ## 🎯 Common Tasks
 
 ### View All Programmes
+
 ```
 GET /programmes
 ```
 
 ### Get Specific Programme
+
 ```
 GET /programmes/{id}
 ```
 
 ### Create New Programme
+
 ```
 POST /programmes
 Body: {code, name, level, duration_semesters, description?, accreditation_body?}
 ```
 
 ### Add PLO
+
 ```
 POST /programmes/{programme_id}/plos
 Body: {code, description, sequence_order}
 ```
 
 ### Add Study Plan
+
 ```
 POST /programmes/{programme_id}/study-plans
 Body: {name, description?, total_years, semesters_per_year, is_active?}
 ```
 
 ### Create CLO-PLO Mapping
+
 ```
 POST /programmes/mappings
 Body: {course_id, programme_plo_id, clo_code, bloom_level, alignment_notes?}
 ```
 
 ### Get Mapping Matrix
+
 ```
 GET /programmes/{programme_id}/mappings/matrix
 Returns: courses, plos, and mapping grid
 ```
 
 ### Get Coverage Report
+
 ```
 GET /programmes/{programme_id}/mappings/coverage
 Returns: coverage percentage and all mappings
 ```
 
 ### Assign Programme Chair
+
 ```
 POST /programmes/{programme_id}/assign-chair/{user_id}
 ```
 
 ### Submit for Approval
+
 ```
 POST /programmes/{programme_id}/submit-for-approval
 ```
@@ -157,6 +178,7 @@ Key Files:
 ## 🔐 Permissions Required
 
 Currently using these permission checks:
+
 - `programme.create` - Create programmes
 - `programme.edit` - Edit programmes
 - `programme.delete` - Delete programmes
@@ -165,11 +187,13 @@ Currently using these permission checks:
 ## 🧪 Testing
 
 Run the seeder to add sample data:
+
 ```bash
 php artisan db:seed --class=ProgrammeManagementSeeder
 ```
 
 This will create:
+
 - 1 sample Computer Science programme
 - 5 PLOs
 - 3 PEOs
@@ -215,6 +239,7 @@ clo_plo_mappings
 ## 🎨 UI Components
 
 ### Main Components
+
 - Responsive table layouts
 - Modal forms for CRUD
 - Bootstrap card layouts
@@ -223,6 +248,7 @@ clo_plo_mappings
 - Summary statistics
 
 ### Interactive Elements
+
 - Inline add/edit/delete buttons
 - Dropdown role selection
 - Textarea for descriptions
@@ -237,11 +263,12 @@ clo_plo_mappings
 🌟 **Aligned**: Full CLO-PLO mapping with Bloom's taxonomy  
 🌟 **Workflow**: Draft → Submission → Approval process  
 🌟 **Reports**: Coverage analysis and achievement summaries  
-🌟 **Scalable**: Handles multiple programmes, thousands of mappings  
+🌟 **Scalable**: Handles multiple programmes, thousands of mappings
 
 ## 🔗 Integration Points
 
 The module integrates with:
+
 - Existing Course model and management
 - User/Authentication system for chair assignment
 - Permission system for access control

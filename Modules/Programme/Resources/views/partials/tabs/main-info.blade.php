@@ -28,16 +28,20 @@
                 @switch($programme->status)
                     @case('approved')
                         <span class="badge bg-success">Approved</span>
-                        @break
+                    @break
+
                     @case('submitted')
                         <span class="badge bg-info">Submitted</span>
-                        @break
+                    @break
+
                     @case('in_review')
                         <span class="badge bg-warning">In Review</span>
-                        @break
+                    @break
+
                     @case('rejected')
                         <span class="badge bg-danger">Rejected</span>
-                        @break
+                    @break
+
                     @default
                         <span class="badge bg-secondary">Draft</span>
                 @endswitch
@@ -45,7 +49,7 @@
 
             <dt class="col-sm-3">Chair</dt>
             <dd class="col-sm-9">
-                @if($programme->programmeChair)
+                @if ($programme->programmeChair)
                     <div>
                         <strong>{{ $programme->programmeChair->name }}</strong>
                         <br>

@@ -15,7 +15,7 @@
             Map Course Learning Outcomes (CLOs) to Programme Learning Outcomes (PLOs) using Bloom's Taxonomy levels.
         </div>
 
-        @if($programme->courses->isNotEmpty() && $programme->programmePLOs->isNotEmpty())
+        @if ($programme->courses->isNotEmpty() && $programme->programmePLOs->isNotEmpty())
             <div class="table-responsive">
                 <table class="table table-sm table-hover align-middle mb-0">
                     <thead class="table-light sticky-top">
@@ -31,20 +31,20 @@
                         @php
                             $mappings = \Modules\Programme\Models\CLOPLOMapping::whereIn(
                                 'course_id',
-                                $programme->courses()->pluck('id')
+                                $programme->courses()->pluck('id'),
                             )
-                            ->with(['course:id,code,name', 'programmePLO:id,code,description'])
-                            ->orderBy(function ($q) {
-                                $q->selectRaw('courses.code')
-                                    ->from('courses')
-                                    ->whereColumn('courses.id', 'clo_plo_mappings.course_id');
-                            })
-                            ->orderBy('clo_code')
-                            ->get();
+                                ->with(['course:id,code,name', 'programmePLO:id,code,description'])
+                                ->orderBy(function ($q) {
+                                    $q->selectRaw('courses.code')
+                                        ->from('courses')
+                                        ->whereColumn('courses.id', 'clo_plo_mappings.course_id');
+                                })
+                                ->orderBy('clo_code')
+                                ->get();
                         @endphp
 
-                        @if($mappings->isNotEmpty())
-                            @foreach($mappings as $mapping)
+                        @if ($mappings->isNotEmpty())
+                            @foreach ($mappings as $mapping)
                                 <tr>
                                     <td>
                                         <small>
@@ -55,7 +55,8 @@
                                     <td><code>{{ $mapping->clo_code }}</code></td>
                                     <td>
                                         <small>
-                                            <span class="badge bg-light text-dark">{{ $mapping->programmePLO->code }}</span>
+                                            <span
+                                                class="badge bg-light text-dark">{{ $mapping->programmePLO->code }}</span>
                                         </small>
                                     </td>
                                     <td>
@@ -65,8 +66,8 @@
                                     </td>
                                     <td>
                                         @can('update', $programme)
-                                            <button class="btn btn-outline-danger btn-sm" 
-                                                    onclick="deleteMapping({{ $mapping->id }})">
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                onclick="deleteMapping({{ $mapping->id }})">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         @endcan
@@ -106,7 +107,7 @@
                         <label for="map_course" class="form-label">Course</label>
                         <select class="form-select" id="map_course" name="course_id" required>
                             <option value="">Select Course</option>
-                            @foreach($programme->courses->sortBy('code') as $course)
+                            @foreach ($programme->courses->sortBy('code') as $course)
                                 <option value="{{ $course->id }}">{{ $course->code }} - {{ $course->name }}</option>
                             @endforeach
                         </select>
@@ -115,15 +116,16 @@
                         <label for="map_plo" class="form-label">PLO</label>
                         <select class="form-select" id="map_plo" name="programme_plo_id" required>
                             <option value="">Select PLO</option>
-                            @foreach($programme->programmePLOs->sortBy('sequence_order') as $plo)
-                                <option value="{{ $plo->id }}">{{ $plo->code }} - {{ substr($plo->description, 0, 50) }}...</option>
+                            @foreach ($programme->programmePLOs->sortBy('sequence_order') as $plo)
+                                <option value="{{ $plo->id }}">{{ $plo->code }} -
+                                    {{ substr($plo->description, 0, 50) }}...</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="map_clo" class="form-label">CLO Code</label>
-                        <input type="text" class="form-control" id="map_clo" name="clo_code" 
-                               placeholder="e.g., CLO1" required>
+                        <input type="text" class="form-control" id="map_clo" name="clo_code"
+                            placeholder="e.g., CLO1" required>
                     </div>
                     <div class="mb-3">
                         <label for="map_bloom" class="form-label">Bloom Level</label>
@@ -139,8 +141,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="map_notes" class="form-label">Alignment Notes</label>
-                        <textarea class="form-control" id="map_notes" name="alignment_notes" 
-                                  rows="2" placeholder="Optional notes about this mapping"></textarea>
+                        <textarea class="form-control" id="map_notes" name="alignment_notes" rows="2"
+                            placeholder="Optional notes about this mapping"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -153,52 +155,54 @@
 </div>
 
 <script>
-function saveMapping(e) {
-    e.preventDefault();
-    const data = {
-        course_id: document.getElementById('map_course').value,
-        programme_plo_id: document.getElementById('map_plo').value,
-        clo_code: document.getElementById('map_clo').value,
-        bloom_level: document.getElementById('map_bloom').value,
-        alignment_notes: document.getElementById('map_notes').value,
-    };
-    
-    fetch('/programmes/mappings', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (d.success) {
-            alert(d.message);
-            location.reload();
-        }
-    })
-    .catch(e => alert('Error: ' + e.message));
-}
+    function saveMapping(e) {
+        e.preventDefault();
+        const data = {
+            course_id: document.getElementById('map_course').value,
+            programme_plo_id: document.getElementById('map_plo').value,
+            clo_code: document.getElementById('map_clo').value,
+            bloom_level: document.getElementById('map_bloom').value,
+            alignment_notes: document.getElementById('map_notes').value,
+        };
 
-function deleteMapping(id) {
-    if (confirm('Delete this mapping?')) {
-        fetch(`/programmes/mappings/${id}`, {
-            method: 'DELETE',
-            headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content}
-        })
-        .then(r => r.json())
-        .then(d => {
-            if (d.success) {
-                alert(d.message);
-                location.reload();
-            }
-        });
+        fetch('/programmes/mappings', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    alert(d.message);
+                    location.reload();
+                }
+            })
+            .catch(e => alert('Error: ' + e.message));
     }
-}
 
-function filterCourseMapping(courseId) {
-    // Could be enhanced to filter the mapping table by course
-    console.log('Filter mappings for course:', courseId);
-}
+    function deleteMapping(id) {
+        if (confirm('Delete this mapping?')) {
+            fetch(`/programmes/mappings/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        alert(d.message);
+                        location.reload();
+                    }
+                });
+        }
+    }
+
+    function filterCourseMapping(courseId) {
+        // Could be enhanced to filter the mapping table by course
+        console.log('Filter mappings for course:', courseId);
+    }
 </script>
