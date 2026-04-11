@@ -44,6 +44,19 @@
             </button>
         </form>
 
+        @if (config('services.sso.enabled'))
+            <div class="mt-5 flex items-center gap-4">
+                <div class="h-px flex-1 bg-red-200"></div>
+                <span class="text-xs font-semibold uppercase tracking-[0.24em] text-red-900/50">or</span>
+                <div class="h-px flex-1 bg-red-200"></div>
+            </div>
+
+            <a href="{{ route('integration.sso.redirect') }}"
+                class="mt-5 flex w-full items-center justify-center rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-950 transition hover:border-red-400 hover:bg-red-100">
+                Login with SSO
+            </a>
+        @endif
+
         <div class="mt-6 flex items-center justify-between text-sm">
             <a href="{{ route('password.request') }}"
                 class="font-semibold text-red-900 underline decoration-red-300 underline-offset-4">Forgot password?</a>

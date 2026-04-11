@@ -46,4 +46,13 @@ return [
         'credentials' => env('FCM_CREDENTIALS_PATH'),
     ],
 
+    'sso' => [
+        'enabled' => (bool) env('SSO_ENABLED', false),
+        'driver' => env('SSO_DRIVER', 'google'),
+        'client_id' => env('SSO_CLIENT_ID'),
+        'client_secret' => env('SSO_CLIENT_SECRET'),
+        'redirect' => env('SSO_REDIRECT_URI', env('APP_URL') . '/integration/sso/callback'),
+        'stateless' => (bool) env('SSO_STATELESS', true),
+    ],
+
 ];

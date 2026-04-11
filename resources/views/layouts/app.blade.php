@@ -33,6 +33,9 @@
                         <a href="{{ route('notifications.settings') }}"
                             class="rounded-lg border border-red-300 px-3 py-1.5 font-medium text-red-900 hover:bg-red-50">Notification
                             Settings</a>
+                        <a href="{{ route('integration.sso.settings') }}"
+                            class="rounded-lg border border-red-300 px-3 py-1.5 font-medium text-red-900 hover:bg-red-50">SSO
+                            Settings</a>
                     @endif
                     @if (auth()->user()->hasAnyRole([
                                 'Admin',

@@ -23,6 +23,9 @@ class User extends Authenticatable
         'email',
         'staff_id',
         'faculty',
+        'sso_provider',
+        'sso_subject',
+        'last_sso_login_at',
         'password',
     ];
 
@@ -50,6 +53,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_sso_login_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
