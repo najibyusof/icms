@@ -26,6 +26,11 @@
 
             <div class="flex items-center gap-3 text-sm">
                 @auth
+                    @if (auth()->user()->hasAnyRole(['Admin', 'admin']))
+                        <a href="{{ route('workflows.manage.definitions') }}"
+                            class="rounded-lg border border-red-300 px-3 py-1.5 font-medium text-red-900 hover:bg-red-50">Workflow
+                            Setup</a>
+                    @endif
                     <a href="{{ route('password.change') }}"
                         class="rounded-lg border border-red-300 px-3 py-1.5 font-medium text-red-900 hover:bg-red-50">Change
                         Password</a>

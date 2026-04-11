@@ -16,8 +16,8 @@ use Modules\Course\Models\Course;
 use Modules\Course\Http\Requests\StoreCourseRequest;
 use Modules\Course\Services\CourseService;
 use Modules\Programme\Models\Programme;
-use Modules\Workflow\DTOs\WorkflowDecisionDTO;
 use Modules\Workflow\Http\Requests\RecordWorkflowDecisionRequest;
+use Modules\Workflow\Models\WorkflowInstance;
 use Modules\Workflow\Services\WorkflowService;
 
 class CourseController extends Controller
@@ -128,12 +128,17 @@ class CourseController extends Controller
     ): RedirectResponse {
         $workflowId = (int) $request->integer('workflow_id');
 
-        abort_unless(
-            $course->status !== 'draft' && $this->courseService->workflowTimeline($course, (int) $request->user()->id)['action']['workflow_id'] === $workflowId,
-            404
-        );
+        $workflow = WorkflowInstance::query()
+            ->whereKey($workflowId)
+            ->where('entity_type', Course::class)
+            ->where('entity_id', $course->id)
+            ->firstOrFail();
 
-        $workflowService->recordDecision(WorkflowDecisionDTO::fromArray($request->validated(), (int) $request->user()->id));
+        if ($request->input('decision') === 'approved') {
+            $workflowService->approve($workflow, $request->user(), $request->input('comments'));
+        } else {
+            $workflowService->reject($workflow, $request->user(), (string) $request->input('comments'));
+        }
 
         return redirect()->route('courses.edit', $course)->with('success', 'Workflow decision recorded successfully.');
     }

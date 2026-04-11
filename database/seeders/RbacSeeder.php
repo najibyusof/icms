@@ -45,6 +45,7 @@ class RbacSeeder extends Seeder
         'user.delete',
         'programme.view',
         'programme.create',
+        'programme.update',
         'course.view',
         'course.create',
         'course.update',
@@ -52,6 +53,7 @@ class RbacSeeder extends Seeder
         'group.view',
         'group.create',
         'workflow.view',
+        'workflow.submit',
         'workflow.review',
         'examination.view',
         'examination.submit',
@@ -76,8 +78,8 @@ class RbacSeeder extends Seeder
             }
 
             $role->syncPermissions(match ($roleName) {
-                'lecturer', 'Lecturer' => ['programme.view', 'course.view', 'group.view', 'examination.view', 'examination.submit', 'notification.view'],
-                'coordinator', 'Programme Coordinator' => ['programme.view', 'course.view', 'group.view', 'group.create', 'workflow.view', 'notification.view'],
+                'lecturer', 'Lecturer' => ['programme.view', 'course.view', 'course.submit', 'workflow.view', 'workflow.submit', 'group.view', 'examination.view', 'examination.submit', 'notification.view'],
+                'coordinator', 'Programme Coordinator' => ['programme.view', 'programme.update', 'course.view', 'course.submit', 'workflow.view', 'workflow.submit', 'group.view', 'group.create', 'notification.view'],
                 'reviewer', 'Reviewer' => ['workflow.view', 'workflow.review', 'examination.view', 'notification.view'],
                 'approver', 'Approver' => ['workflow.view', 'workflow.review', 'examination.view', 'notification.view'],
                 default => [],

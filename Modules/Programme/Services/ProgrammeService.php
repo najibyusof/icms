@@ -11,6 +11,9 @@ use Modules\Programme\Models\ProgrammePEO;
 use Modules\Programme\Models\ProgrammePLO;
 use Modules\Programme\Models\StudyPlan;
 use Modules\Programme\Models\StudyPlanCourse;
+use Modules\Workflow\Models\WorkflowInstance;
+use Modules\Workflow\Models\WorkflowSetting;
+use Modules\Workflow\Services\WorkflowService;
 
 class ProgrammeService
 {
@@ -67,11 +70,30 @@ class ProgrammeService
     /**
      * Submit programme for approval
      */
-    public function submitForApproval(Programme $programme): Programme
+    public function submitForApproval(Programme $programme, User $user): Programme
     {
-        if ($programme->status === Programme::STATUS_DRAFT) {
-            $programme->update(['status' => Programme::STATUS_SUBMITTED]);
+        $workflowService = app(WorkflowService::class);
+
+        $instance = WorkflowInstance::query()
+            ->where('entity_type', Programme::class)
+            ->where('entity_id', $programme->id)
+            ->latest('id')
+            ->first();
+
+        if (! $instance || in_array($instance->status, ['approved', 'rejected', 'withdrawn'], true)) {
+            $instance = $workflowService->startWorkflowForEntityTypeAndVersion(
+                $programme,
+                $user,
+                $this->defaultWorkflowTemplateVersion()
+            );
         }
+
+        if ($instance->status === 'draft') {
+            $workflowService->submit($instance, $user);
+        }
+
+        $programme->refresh();
+
         return $programme;
     }
 
@@ -246,6 +268,19 @@ class ProgrammeService
             'course_id',
             $programme->courses()->pluck('id')
         )->distinct('course_id', 'programme_plo_id')->count();
+    }
+
+    private function defaultWorkflowTemplateVersion(): int
+    {
+        $dbVersion = WorkflowSetting::get('default_version.programme');
+
+        if ($dbVersion !== null && is_numeric($dbVersion) && (int) $dbVersion > 0) {
+            return (int) $dbVersion;
+        }
+
+        $version = config('workflow.templates.default_versions.programme', 1);
+
+        return is_numeric($version) && (int) $version > 0 ? (int) $version : 1;
     }
 }
 

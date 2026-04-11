@@ -85,6 +85,10 @@
                 <a href="{{ route('courses.slt.export', $course) }}"
                     class="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50">Export
                     SLT (Excel)</a>
+                @if (($workflowSummary['workflow_id'] ?? null) !== null)
+                    <a href="{{ route('workflows.timeline', $workflowSummary['workflow_id']) }}"
+                        class="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50">View Workflow</a>
+                @endif
                 @can('submit', $course)
                     <form method="POST" action="{{ route('courses.submit', $course) }}">
                         @csrf
@@ -125,6 +129,14 @@
                             {{ $workflowSummary['completed_count'] }}/{{ $workflowSummary['approval_count'] }}</p>
                     </article>
                 </div>
+                @if (($workflowSummary['workflow_id'] ?? null) !== null)
+                    <div class="mb-4">
+                        <a href="{{ route('workflows.timeline', $workflowSummary['workflow_id']) }}"
+                            class="inline-flex items-center rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50">
+                            Open Full Workflow Timeline
+                        </a>
+                    </div>
+                @endif
             @endif
 
             @if ($workflowAction && ($workflowAction['is_actionable'] ?? false))

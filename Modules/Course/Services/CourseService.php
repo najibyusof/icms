@@ -6,12 +6,12 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Modules\Course\DTOs\CourseData;
 use Modules\Course\Models\Course;
-use Modules\Workflow\Models\WorkflowApproval;
 use Modules\Workflow\Models\WorkflowInstance;
+use Modules\Workflow\Models\WorkflowSetting;
+use Modules\Workflow\Services\WorkflowService;
 
 class CourseService
 {
@@ -73,56 +73,25 @@ class CourseService
     public function submitForApproval(Course $course, int $initiatedBy): void
     {
         DB::transaction(function () use ($course, $initiatedBy): void {
-            $course->update([
-                'status' => 'submitted',
-                'submitted_at' => now(),
-            ]);
+            $user = User::query()->findOrFail($initiatedBy);
+            $workflowService = app(WorkflowService::class);
 
-            if (Schema::hasTable('workflow_instances')) {
-                $workflow = WorkflowInstance::query()->firstOrCreate(
-                    [
-                        'workflowable_type' => Course::class,
-                        'workflowable_id' => $course->id,
-                    ],
-                    [
-                        'initiated_by' => $initiatedBy,
-                        'status' => 'in_review',
-                        'current_stage' => 1,
-                    ]
+            $instance = WorkflowInstance::query()
+                ->where('entity_type', Course::class)
+                ->where('entity_id', $course->id)
+                ->latest('id')
+                ->first();
+
+            if (! $instance || in_array($instance->status, ['approved', 'rejected', 'withdrawn'], true)) {
+                $instance = $workflowService->startWorkflowForEntityTypeAndVersion(
+                    $course,
+                    $user,
+                    $this->defaultWorkflowTemplateVersion()
                 );
+            }
 
-                if (Schema::hasTable('workflow_approvals')) {
-                    $reviewerId = $course->vetter_id ?: User::role(['Reviewer', 'reviewer'])->value('id');
-                    $approverId = User::role(['Approver', 'approver'])->value('id');
-
-                    if ($reviewerId) {
-                        WorkflowApproval::query()->firstOrCreate(
-                            [
-                                'workflow_instance_id' => $workflow->id,
-                                'stage' => 1,
-                            ],
-                            [
-                                'reviewer_id' => $reviewerId,
-                                'role_name' => 'reviewer',
-                                'status' => 'pending',
-                            ]
-                        );
-                    }
-
-                    if ($approverId) {
-                        WorkflowApproval::query()->firstOrCreate(
-                            [
-                                'workflow_instance_id' => $workflow->id,
-                                'stage' => 2,
-                            ],
-                            [
-                                'reviewer_id' => $approverId,
-                                'role_name' => 'approver',
-                                'status' => 'queued',
-                            ]
-                        );
-                    }
-                }
+            if ($instance->status === 'draft') {
+                $workflowService->submit($instance, $user);
             }
         });
     }
@@ -153,18 +122,11 @@ class CourseService
      */
     public function workflowTimeline(Course $course, ?int $viewerUserId = null): array
     {
-        if (! Schema::hasTable('workflow_instances')) {
-            return [
-                'summary' => null,
-                'events' => [],
-            ];
-        }
-
         $instance = WorkflowInstance::query()
-            ->where('workflowable_type', Course::class)
-            ->where('workflowable_id', $course->id)
-            ->with(['initiator'])
-            ->latest('created_at')
+            ->where('entity_type', Course::class)
+            ->where('entity_id', $course->id)
+            ->with(['workflow.steps', 'currentStep', 'creator', 'logs.user', 'logs.workflowStep'])
+            ->latest('id')
             ->first();
 
         if (! $instance) {
@@ -174,68 +136,59 @@ class CourseService
             ];
         }
 
-        $events = [[
-            'label' => 'Submitted',
-            'status' => $instance->status,
-            'by' => $instance->initiator?->name ?? 'System',
-            'at' => $instance->created_at,
-            'notes' => 'Current stage: ' . ($instance->current_stage ?? '-'),
-            'stage' => 0,
-        ]];
+        $steps = $instance->workflow?->steps ?? collect();
+        $approvalCount = $steps->count();
+        $completedCount = $instance->status === 'approved'
+            ? $approvalCount
+            : $instance->logs->where('action', 'approved')->pluck('workflow_step_id')->filter()->unique()->count();
 
-        $approvalCount = 0;
-        $completedCount = 0;
+        $events = $instance->logs
+            ->sortBy('created_at')
+            ->values()
+            ->map(function ($log) {
+                $status = match ($log->action) {
+                    'approved' => 'approved',
+                    'rejected' => 'rejected',
+                    'clarification_requested' => 'pending',
+                    'submitted' => 'submitted',
+                    default => 'info',
+                };
 
-        if (Schema::hasTable('workflow_approvals')) {
-            $approvals = WorkflowApproval::query()
-                ->where('workflow_instance_id', $instance->id)
-                ->with('reviewer')
-                ->orderBy('stage')
-                ->orderBy('created_at')
-                ->get();
-
-            $approvalCount = $approvals->count();
-            $completedCount = $approvals->whereIn('status', ['approved', 'rejected'])->count();
-
-            foreach ($approvals as $approval) {
-                $events[] = [
-                    'label' => 'Stage ' . $approval->stage,
-                    'status' => $approval->status,
-                    'by' => $approval->reviewer?->name ?? 'Pending assignment',
-                    'at' => $approval->acted_at ?? $approval->created_at,
-                    'notes' => $approval->comments,
-                    'role' => str($approval->role_name)->headline()->toString(),
-                    'stage' => $approval->stage,
+                return [
+                    'label' => $log->workflowStep?->title ?? $log->getActionLabel(),
+                    'status' => $status,
+                    'by' => $log->user?->name ?? 'System',
+                    'at' => $log->created_at,
+                    'notes' => $log->comment,
+                    'role' => $log->workflowStep && ! empty($log->workflowStep->roles_required)
+                        ? collect($log->workflowStep->roles_required)->map(fn($role) => str($role)->headline()->toString())->join(', ')
+                        : null,
+                    'stage' => $log->workflowStep?->step_number,
                 ];
-            }
-        }
+            })
+            ->all();
 
-        $pendingApproval = null;
-        if (Schema::hasTable('workflow_approvals')) {
-            $pendingApproval = WorkflowApproval::query()
-                ->where('workflow_instance_id', $instance->id)
-                ->where('status', 'pending')
-                ->orderBy('stage')
-                ->with('reviewer')
-                ->first();
-        }
+        $pendingStep = $instance->status === 'in_progress' ? $instance->currentStep : null;
+        $viewer = $viewerUserId ? User::query()->find($viewerUserId) : null;
+        $viewerRoles = $viewer?->roles()->pluck('name')->toArray() ?? [];
 
         return [
             'summary' => [
+                'workflow_id' => $instance->id,
                 'status' => $instance->status,
-                'current_stage' => $instance->current_stage,
+                'current_stage' => $pendingStep?->step_number,
                 'approval_count' => $approvalCount,
                 'completed_count' => $completedCount,
             ],
             'events' => $events,
             'action' => [
                 'workflow_id' => $instance->id,
-                'is_actionable' => $pendingApproval !== null
-                    && $viewerUserId !== null
-                    && (int) $pendingApproval->reviewer_id === $viewerUserId,
-                'pending_stage' => $pendingApproval?->stage,
-                'pending_role' => $pendingApproval?->role_name,
-                'pending_reviewer' => $pendingApproval?->reviewer?->name,
+                'is_actionable' => $pendingStep !== null && $pendingStep->userHasRequiredRole($viewerRoles),
+                'pending_stage' => $pendingStep?->step_number,
+                'pending_role' => $pendingStep && ! empty($pendingStep->roles_required)
+                    ? collect($pendingStep->roles_required)->map(fn($role) => str($role)->headline()->toString())->join(', ')
+                    : null,
+                'pending_reviewer' => null,
             ],
         ];
     }
@@ -325,5 +278,18 @@ class CourseService
                 'assessments' => 'Assessment total weightage must be exactly 100%.',
             ]);
         }
+    }
+
+    private function defaultWorkflowTemplateVersion(): int
+    {
+        $dbVersion = WorkflowSetting::get('default_version.course');
+
+        if ($dbVersion !== null && is_numeric($dbVersion) && (int) $dbVersion > 0) {
+            return (int) $dbVersion;
+        }
+
+        $version = config('workflow.templates.default_versions.course', 1);
+
+        return is_numeric($version) && (int) $version > 0 ? (int) $version : 1;
     }
 }

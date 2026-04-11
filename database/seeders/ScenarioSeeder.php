@@ -10,8 +10,10 @@ use Modules\Course\Models\Course;
 use Modules\Examination\Models\Examination;
 use Modules\Group\Models\AcademicGroup;
 use Modules\Programme\Models\Programme;
-use Modules\Workflow\Models\WorkflowApproval;
+use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Models\WorkflowInstance;
+use Modules\Workflow\Models\WorkflowLog;
+use Modules\Workflow\Models\WorkflowStep;
 
 class ScenarioSeeder extends Seeder
 {
@@ -163,105 +165,25 @@ class ScenarioSeeder extends Seeder
             $this->seedCourseDetailRows($course);
         }
 
-        $this->seedCourseWorkflow(
-            course: $courseStage1Pending,
-            initiatedBy: $users['lecturer1']->id,
-            workflowStatus: 'in_review',
-            currentStage: 1,
-            approvals: [
-                [
-                    'stage' => 1,
-                    'reviewer_id' => $users['reviewer']->id,
-                    'role_name' => 'reviewer',
-                    'status' => 'pending',
-                    'comments' => null,
-                    'acted_at' => null,
-                ],
-                [
-                    'stage' => 2,
-                    'reviewer_id' => $users['approver']->id,
-                    'role_name' => 'approver',
-                    'status' => 'queued',
-                    'comments' => null,
-                    'acted_at' => null,
-                ],
-            ]
-        );
+        $this->seedCourseWorkflow($courseStage1Pending, $users['lecturer1']->id, 'in_progress', 1, [
+            ['action' => 'submitted', 'user_id' => $users['lecturer1']->id, 'comment' => 'Submitted for review.', 'step_number' => 1, 'created_at' => Carbon::now()->subDays(2)],
+        ]);
 
-        $this->seedCourseWorkflow(
-            course: $courseStage2Pending,
-            initiatedBy: $users['lecturer2']->id,
-            workflowStatus: 'in_review',
-            currentStage: 2,
-            approvals: [
-                [
-                    'stage' => 1,
-                    'reviewer_id' => $users['reviewer']->id,
-                    'role_name' => 'reviewer',
-                    'status' => 'approved',
-                    'comments' => 'CLO mapping is complete.',
-                    'acted_at' => Carbon::now()->subDays(3),
-                ],
-                [
-                    'stage' => 2,
-                    'reviewer_id' => $users['approver']->id,
-                    'role_name' => 'approver',
-                    'status' => 'pending',
-                    'comments' => null,
-                    'acted_at' => null,
-                ],
-            ]
-        );
+        $this->seedCourseWorkflow($courseStage2Pending, $users['lecturer2']->id, 'in_progress', 2, [
+            ['action' => 'submitted', 'user_id' => $users['lecturer2']->id, 'comment' => 'Submitted for review.', 'step_number' => 1, 'created_at' => Carbon::now()->subDays(4)],
+            ['action' => 'approved', 'user_id' => $users['reviewer']->id, 'comment' => 'CLO mapping is complete.', 'step_number' => 1, 'created_at' => Carbon::now()->subDays(3)],
+        ]);
 
-        $this->seedCourseWorkflow(
-            course: $courseApproved,
-            initiatedBy: $users['lecturer1']->id,
-            workflowStatus: 'approved',
-            currentStage: null,
-            approvals: [
-                [
-                    'stage' => 1,
-                    'reviewer_id' => $users['reviewer']->id,
-                    'role_name' => 'reviewer',
-                    'status' => 'approved',
-                    'comments' => 'Meets curriculum standards.',
-                    'acted_at' => Carbon::now()->subDays(9),
-                ],
-                [
-                    'stage' => 2,
-                    'reviewer_id' => $users['approver']->id,
-                    'role_name' => 'approver',
-                    'status' => 'approved',
-                    'comments' => 'Approved for delivery.',
-                    'acted_at' => Carbon::now()->subDays(8),
-                ],
-            ]
-        );
+        $this->seedCourseWorkflow($courseApproved, $users['lecturer1']->id, 'approved', null, [
+            ['action' => 'submitted', 'user_id' => $users['lecturer1']->id, 'comment' => 'Submitted for review.', 'step_number' => 1, 'created_at' => Carbon::now()->subDays(10)],
+            ['action' => 'approved', 'user_id' => $users['reviewer']->id, 'comment' => 'Meets curriculum standards.', 'step_number' => 1, 'created_at' => Carbon::now()->subDays(9)],
+            ['action' => 'approved', 'user_id' => $users['approver']->id, 'comment' => 'Approved for delivery.', 'step_number' => 2, 'created_at' => Carbon::now()->subDays(8)],
+        ]);
 
-        $this->seedCourseWorkflow(
-            course: $courseRejected,
-            initiatedBy: $users['lecturer2']->id,
-            workflowStatus: 'rejected',
-            currentStage: null,
-            approvals: [
-                [
-                    'stage' => 1,
-                    'reviewer_id' => $users['reviewer']->id,
-                    'role_name' => 'reviewer',
-                    'status' => 'rejected',
-                    'comments' => 'Assessment weightage does not align with CLO coverage.',
-                    'acted_at' => Carbon::now()->subDays(7),
-                ],
-                [
-                    'stage' => 2,
-                    'reviewer_id' => $users['approver']->id,
-                    'role_name' => 'approver',
-                    'status' => 'queued',
-                    'comments' => null,
-                    'acted_at' => null,
-                ],
-            ]
-        );
+        $this->seedCourseWorkflow($courseRejected, $users['lecturer2']->id, 'rejected', null, [
+            ['action' => 'submitted', 'user_id' => $users['lecturer2']->id, 'comment' => 'Submitted for review.', 'step_number' => 1, 'created_at' => Carbon::now()->subDays(8)],
+            ['action' => 'rejected', 'user_id' => $users['reviewer']->id, 'comment' => 'Assessment weightage does not align with CLO coverage.', 'step_number' => 1, 'created_at' => Carbon::now()->subDays(7)],
+        ]);
 
         $examPending = Examination::query()->updateOrCreate(
             ['title' => 'Data Structures Midterm'],
@@ -299,80 +221,6 @@ class ScenarioSeeder extends Seeder
             ]
         );
 
-        $this->seedExaminationWorkflow(
-            examination: $examPending,
-            initiatedBy: $users['lecturer1']->id,
-            workflowStatus: 'in_review',
-            currentStage: 1,
-            approvals: [
-                [
-                    'stage' => 1,
-                    'reviewer_id' => $users['reviewer']->id,
-                    'role_name' => 'reviewer',
-                    'status' => 'pending',
-                    'comments' => null,
-                    'acted_at' => null,
-                ],
-                [
-                    'stage' => 2,
-                    'reviewer_id' => $users['approver']->id,
-                    'role_name' => 'approver',
-                    'status' => 'queued',
-                    'comments' => null,
-                    'acted_at' => null,
-                ],
-            ]
-        );
-
-        $this->seedExaminationWorkflow(
-            examination: $examApproved,
-            initiatedBy: $users['lecturer1']->id,
-            workflowStatus: 'approved',
-            currentStage: null,
-            approvals: [
-                [
-                    'stage' => 1,
-                    'reviewer_id' => $users['reviewer']->id,
-                    'role_name' => 'reviewer',
-                    'status' => 'approved',
-                    'comments' => 'Question difficulty is appropriate.',
-                    'acted_at' => Carbon::now()->subDays(4),
-                ],
-                [
-                    'stage' => 2,
-                    'reviewer_id' => $users['approver']->id,
-                    'role_name' => 'approver',
-                    'status' => 'approved',
-                    'comments' => 'Approved for final assessment.',
-                    'acted_at' => Carbon::now()->subDays(3),
-                ],
-            ]
-        );
-
-        $this->seedExaminationWorkflow(
-            examination: $examRejected,
-            initiatedBy: $users['lecturer2']->id,
-            workflowStatus: 'rejected',
-            currentStage: null,
-            approvals: [
-                [
-                    'stage' => 1,
-                    'reviewer_id' => $users['reviewer']->id,
-                    'role_name' => 'reviewer',
-                    'status' => 'rejected',
-                    'comments' => 'Missing course outcome mapping in rubric.',
-                    'acted_at' => Carbon::now()->subDays(2),
-                ],
-                [
-                    'stage' => 2,
-                    'reviewer_id' => $users['approver']->id,
-                    'role_name' => 'approver',
-                    'status' => 'queued',
-                    'comments' => null,
-                    'acted_at' => null,
-                ],
-            ]
-        );
     }
 
     /**
@@ -498,68 +346,61 @@ class ScenarioSeeder extends Seeder
     }
 
     /**
-     * @param array<int, array<string, mixed>> $approvals
+     * @param array<int, array<string, mixed>> $logs
      */
-    private function seedCourseWorkflow(Course $course, int $initiatedBy, string $workflowStatus, ?int $currentStage, array $approvals): void
+    private function seedCourseWorkflow(Course $course, int $createdBy, string $workflowStatus, ?int $currentStage, array $logs): void
     {
-        $workflow = WorkflowInstance::query()->updateOrCreate(
-            [
-                'workflowable_type' => Course::class,
-                'workflowable_id' => $course->id,
-            ],
-            [
-                'initiated_by' => $initiatedBy,
-                'status' => $workflowStatus,
-                'current_stage' => $currentStage,
-            ]
-        );
+        $workflow = Workflow::query()->where('name', 'Course Approval Workflow')->first();
 
-        foreach ($approvals as $approval) {
-            WorkflowApproval::query()->updateOrCreate(
-                [
-                    'workflow_instance_id' => $workflow->id,
-                    'stage' => $approval['stage'],
-                ],
-                [
-                    'reviewer_id' => $approval['reviewer_id'],
-                    'role_name' => $approval['role_name'],
-                    'status' => $approval['status'],
-                    'comments' => $approval['comments'],
-                    'acted_at' => $approval['acted_at'],
-                ]
-            );
+        if (! $workflow) {
+            return;
         }
-    }
 
-    /**
-     * @param array<int, array<string, mixed>> $approvals
-     */
-    private function seedExaminationWorkflow(Examination $examination, int $initiatedBy, string $workflowStatus, ?int $currentStage, array $approvals): void
-    {
+        $currentStepId = null;
+        if ($currentStage !== null) {
+            $currentStepId = WorkflowStep::query()
+                ->where('workflow_id', $workflow->id)
+                ->where('step_number', $currentStage)
+                ->value('id');
+        }
+
         $workflow = WorkflowInstance::query()->updateOrCreate(
             [
-                'workflowable_type' => Examination::class,
-                'workflowable_id' => $examination->id,
+                'workflow_id' => $workflow->id,
+                'entity_type' => Course::class,
+                'entity_id' => $course->id,
             ],
             [
-                'initiated_by' => $initiatedBy,
+                'created_by' => $createdBy,
+                'submitted_by' => $createdBy,
+                'submitted_at' => Carbon::now()->subDays(2),
                 'status' => $workflowStatus,
-                'current_stage' => $currentStage,
+                'current_step_id' => $currentStepId,
+                'approved_at' => $workflowStatus === 'approved' ? Carbon::now()->subDays(8) : null,
+                'rejected_at' => $workflowStatus === 'rejected' ? Carbon::now()->subDays(7) : null,
+                'rejection_reason' => $workflowStatus === 'rejected' ? 'Seeded rejection scenario.' : null,
             ]
         );
 
-        foreach ($approvals as $approval) {
-            WorkflowApproval::query()->updateOrCreate(
+        foreach ($logs as $log) {
+            $stepId = null;
+            if (isset($log['step_number'])) {
+                $stepId = WorkflowStep::query()
+                    ->where('workflow_id', $workflow->workflow_id)
+                    ->where('step_number', $log['step_number'])
+                    ->value('id');
+            }
+
+            WorkflowLog::query()->updateOrCreate(
                 [
                     'workflow_instance_id' => $workflow->id,
-                    'stage' => $approval['stage'],
+                    'action' => $log['action'],
+                    'user_id' => $log['user_id'],
+                    'workflow_step_id' => $stepId,
                 ],
                 [
-                    'reviewer_id' => $approval['reviewer_id'],
-                    'role_name' => $approval['role_name'],
-                    'status' => $approval['status'],
-                    'comments' => $approval['comments'],
-                    'acted_at' => $approval['acted_at'],
+                    'comment' => $log['comment'] ?? null,
+                    'created_at' => $log['created_at'] ?? now(),
                 ]
             );
         }

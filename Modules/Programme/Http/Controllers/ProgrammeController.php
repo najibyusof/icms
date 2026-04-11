@@ -21,6 +21,8 @@ use Modules\Programme\Models\StudyPlan;
 use Modules\Programme\Models\StudyPlanCourse;
 use Modules\Programme\Services\MappingService;
 use Modules\Programme\Services\ProgrammeService;
+use Modules\Workflow\Models\WorkflowInstance;
+use Modules\Workflow\Services\WorkflowService;
 
 class ProgrammeController extends Controller
 {
@@ -29,6 +31,7 @@ class ProgrammeController extends Controller
     public function __construct(
         private readonly ProgrammeService $programmeService,
         private readonly MappingService $mappingService,
+        private readonly WorkflowService $workflowService,
     ) {
     }
 
@@ -75,8 +78,25 @@ class ProgrammeController extends Controller
         $programme = $this->programmeService->getWithDetails($programme);
         $stats = $this->programmeService->getProgrammeStats($programme);
         $chairs = $this->programmeService->getAvailableProgrammeChairs();
+        $workflowInstance = WorkflowInstance::query()
+            ->with(['workflow', 'currentStep', 'logs.user', 'logs.workflowStep'])
+            ->where('entity_type', Programme::class)
+            ->where('entity_id', $programme->id)
+            ->latest('id')
+            ->first();
 
-        return view('programme::show', compact('programme', 'stats', 'chairs'));
+        $workflowTimeline = collect();
+        $canWorkflowAct = false;
+
+        if ($workflowInstance) {
+            $workflowTimeline = $this->workflowService->getWorkflowTimeline($workflowInstance);
+            $viewerRoles = auth()->user()?->roles()->pluck('name')->toArray() ?? [];
+
+            $canWorkflowAct = $workflowInstance->isStatus('in_progress')
+                && $workflowInstance->currentStep?->userHasRequiredRole($viewerRoles);
+        }
+
+        return view('programme::show', compact('programme', 'stats', 'chairs', 'workflowInstance', 'workflowTimeline', 'canWorkflowAct'));
     }
 
     /**
@@ -392,7 +412,7 @@ class ProgrammeController extends Controller
     {
         $this->authorize('update', $programme);
 
-        $programme = $this->programmeService->submitForApproval($programme);
+        $programme = $this->programmeService->submitForApproval($programme, auth()->user());
 
         return response()->json([
             'success' => true,

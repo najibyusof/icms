@@ -6,4 +6,5 @@ return [
     App\Providers\FortifyServiceProvider::class,
     App\Providers\ModuleServiceProvider::class,
     Modules\Group\Providers\GroupServiceProvider::class,
+    Modules\Workflow\Providers\WorkflowServiceProvider::class,
 ];
