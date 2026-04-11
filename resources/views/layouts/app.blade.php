@@ -61,23 +61,26 @@
         @auth
             <aside class="hidden w-80 shrink-0 lg:flex lg:flex-col">
                 <div
-                    class="sticky top-6 flex h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[32px] bg-[linear-gradient(180deg,rgba(47,6,6,0.98),rgba(95,15,19,0.94))] p-5 text-white shadow-[0_30px_80px_-30px_rgba(47,6,6,0.8)]">
-                    <div class="rounded-[28px] border border-white/10 bg-white/8 p-5 backdrop-blur">
-                        <a href="{{ route('dashboard') }}" class="block">
-                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-red-200/80">ICMS</p>
-                            <h1 class="mt-3 text-2xl font-semibold tracking-tight">Academic Control</h1>
-                            <p class="mt-2 text-sm text-red-100/75">Navigate courses, programmes, groups, and administrative
-                                workflows from a unified workspace.</p>
-                        </a>
-                    </div>
+                    class="sticky top-6 flex h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(170deg,rgba(47,6,6,0.99),rgba(90,14,18,0.96))] p-4 text-white shadow-[0_30px_80px_-30px_rgba(47,6,6,0.8)]">
+                    <a href="{{ route('dashboard') }}"
+                        class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/6 px-4 py-3.5 transition hover:bg-white/10">
+                        <div
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-xs font-black tracking-wider text-white">
+                            IC
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-red-200/60">ICMS</p>
+                            <p class="text-sm font-bold tracking-tight text-white">Academic Control</p>
+                        </div>
+                    </a>
 
-                    <nav class="mt-6 flex-1 space-y-6 overflow-y-auto pr-1">
-                        <div class="space-y-2">
-                            <p class="ams-sidebar-section-title">Main Navigation</p>
+                    <nav class="mt-3 flex-1 space-y-3 overflow-hidden">
+                        <div class="space-y-0.5">
+                            <p class="ams-sidebar-section-title mb-1.5">Main Navigation</p>
                             <a href="{{ route('dashboard') }}"
                                 class="ams-sidebar-link {{ request()->routeIs('dashboard') ? 'ams-sidebar-link-active' : '' }}">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 12l8-8 8 8M5 10v10h14V10" />
                                 </svg>
                                 <span>Dashboard</span>
@@ -86,33 +89,27 @@
                             @hasanyrole('Admin|admin|Lecturer|lecturer|Programme Coordinator|coordinator')
                                 <a href="{{ route('courses.index') }}"
                                     class="ams-sidebar-link {{ request()->routeIs('courses.*') ? 'ams-sidebar-link-active' : '' }}">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                            d="M4 6.75A2.75 2.75 0 016.75 4h10.5A2.75 2.75 0 0120 6.75v10.5A2.75 2.75 0 0117.25 20H6.75A2.75 2.75 0 014 17.25V6.75z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                            d="M8 8h8M8 12h8M8 16h5" />
+                                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                     </svg>
                                     <span>Course Management</span>
                                 </a>
 
                                 <a href="{{ route('programmes.index') }}"
                                     class="ams-sidebar-link {{ request()->routeIs('programmes.*') ? 'ams-sidebar-link-active' : '' }}">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                            d="M4 5.75A1.75 1.75 0 015.75 4h12.5A1.75 1.75 0 0120 5.75v12.5A1.75 1.75 0 0118.25 20H5.75A1.75 1.75 0 014 18.25V5.75z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                            d="M8 8h8M8 12h8M8 16h4" />
+                                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    <span>Programme Management</span>
+                                    <span>Programmes</span>
                                 </a>
 
                                 <a href="{{ route('groups.index') }}"
                                     class="ams-sidebar-link {{ request()->routeIs('groups.*') ? 'ams-sidebar-link-active' : '' }}">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                            d="M16 11a4 4 0 10-8 0 4 4 0 008 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                            d="M3 20a7 7 0 0118 0" />
+                                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                     <span>Group Management</span>
                                 </a>
@@ -122,11 +119,9 @@
                                 @if (Route::has('users.index'))
                                     <a href="{{ route('users.index') }}"
                                         class="ams-sidebar-link {{ request()->routeIs('users.*') ? 'ams-sidebar-link-active' : '' }}">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                d="M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                d="M4 20a8 8 0 0116 0" />
+                                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                         </svg>
                                         <span>User Management</span>
                                     </a>
@@ -135,36 +130,32 @@
                         </div>
 
                         @auth
-                            <div class="space-y-2">
-                                <p class="ams-sidebar-section-title">Administration</p>
+                            <div class="space-y-0.5">
+                                <p class="ams-sidebar-section-title mb-1.5">Administration</p>
 
                                 @role('Admin|admin')
                                     <a href="{{ route('workflows.manage.definitions') }}"
                                         class="ams-sidebar-link {{ request()->routeIs('workflows.manage.*') ? 'ams-sidebar-link-active' : '' }}">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                d="M10.325 4.317a1 1 0 011.35-.936l1.89.756a1 1 0 00.77 0l1.89-.756a1 1 0 011.35.936l.2 2.042a1 1 0 00.572.82l1.73.965a1 1 0 01.28 1.53l-1.31 1.58a1 1 0 000 1.274l1.31 1.58a1 1 0 01-.28 1.53l-1.73.965a1 1 0 00-.572.82l-.2 2.042a1 1 0 01-1.35.936l-1.89-.756a1 1 0 00-.77 0l-1.89.756a1 1 0 01-1.35-.936l-.2-2.042a1 1 0 00-.572-.82l-1.73-.965a1 1 0 01-.28-1.53l1.31-1.58a1 1 0 000-1.274l-1.31-1.58a1 1 0 01.28-1.53l1.73-.965a1 1 0 00.572-.82l.2-2.042z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                         </svg>
                                         <span>Workflow Setup</span>
                                     </a>
 
                                     <a href="{{ route('notifications.settings') }}"
                                         class="ams-sidebar-link {{ request()->routeIs('notifications.*') ? 'ams-sidebar-link-active' : '' }}">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                d="M9 17v1a3 3 0 006 0v-1" />
+                                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m-1 0v1a3 3 0 006 0v-1" />
                                         </svg>
-                                        <span>Notification Settings</span>
+                                        <span>Notifications</span>
                                     </a>
 
                                     <a href="{{ route('integration.sso.settings') }}"
                                         class="ams-sidebar-link {{ request()->routeIs('integration.*') ? 'ams-sidebar-link-active' : '' }}">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
                                         <span>SSO Settings</span>
@@ -175,8 +166,8 @@
                                     Coordinator|coordinator')
                                     <a href="{{ route('jsu.manage.index') }}"
                                         class="ams-sidebar-link {{ request()->routeIs('jsu.*') ? 'ams-sidebar-link-active' : '' }}">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M9 17v-2m3 2v-4m3 4V7m4 10H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2z" />
                                         </svg>
                                         <span>JSU</span>
@@ -186,18 +177,26 @@
                         @endauth
                     </nav>
 
-                    <div class="mt-6 rounded-[28px] border border-white/10 bg-white/8 p-5 backdrop-blur">
-                        <p class="text-sm font-semibold text-white">{{ auth()->user()->name }}</p>
-                        <p class="mt-1 text-xs uppercase tracking-[0.18em] text-red-200/70">{{ auth()->user()->email }}
-                        </p>
-                        <div class="mt-4 flex flex-wrap gap-2">
+                    <div class="mt-3 rounded-2xl border border-white/10 bg-white/6 p-3.5">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="truncate text-[13px] font-semibold leading-tight text-white">
+                                    {{ auth()->user()->name }}</p>
+                                <p class="truncate text-[10px] leading-snug text-red-200/55">
+                                    {{ auth()->user()->email }}</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex gap-2">
                             <a href="{{ route('password.change') }}"
-                                class="rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-red-100/85 transition hover:bg-white/10">Change
-                                Password</a>
-                            <form method="POST" action="{{ route('logout') }}">
+                                class="flex-1 rounded-lg border border-white/15 py-1.5 text-center text-[11px] font-semibold text-red-100/80 transition hover:bg-white/10">Password</a>
+                            <form method="POST" action="{{ route('logout') }}" class="flex-1">
                                 @csrf
                                 <button type="submit"
-                                    class="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-red-950 transition hover:bg-red-50">Logout</button>
+                                    class="w-full rounded-lg bg-white/90 py-1.5 text-[11px] font-semibold text-red-950 transition hover:bg-white">Logout</button>
                             </form>
                         </div>
                     </div>
