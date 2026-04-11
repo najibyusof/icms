@@ -7,6 +7,8 @@ use Modules\Course\Models\Course;
 use Modules\Course\Policies\CoursePolicy;
 use Modules\Examination\Models\Examination;
 use Modules\Examination\Policies\ExaminationPolicy;
+use Modules\Jsu\Models\Jsu;
+use Modules\Jsu\Policies\JsuPolicy;
 use Modules\Workflow\Models\WorkflowInstance;
 use Modules\Workflow\Policies\WorkflowInstancePolicy;
 use Modules\Group\Models\AcademicGroup;
@@ -20,6 +22,7 @@ class ModuleServiceProvider extends AuthServiceProvider
     protected $policies = [
         Course::class => CoursePolicy::class,
         Examination::class => ExaminationPolicy::class,
+        Jsu::class => JsuPolicy::class,
         WorkflowInstance::class => WorkflowInstancePolicy::class,
         AcademicGroup::class => GroupPolicy::class,
     ];

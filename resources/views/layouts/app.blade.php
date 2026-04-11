@@ -31,6 +31,21 @@
                             class="rounded-lg border border-red-300 px-3 py-1.5 font-medium text-red-900 hover:bg-red-50">Workflow
                             Setup</a>
                     @endif
+                    @if (auth()->user()->hasAnyRole([
+                                'Admin',
+                                'admin',
+                                'Lecturer',
+                                'lecturer',
+                                'Reviewer',
+                                'reviewer',
+                                'Approver',
+                                'approver',
+                                'Programme Coordinator',
+                                'coordinator',
+                            ]))
+                        <a href="{{ route('jsu.manage.index') }}"
+                            class="rounded-lg border border-red-300 px-3 py-1.5 font-medium text-red-900 hover:bg-red-50">JSU</a>
+                    @endif
                     <a href="{{ route('password.change') }}"
                         class="rounded-lg border border-red-300 px-3 py-1.5 font-medium text-red-900 hover:bg-red-50">Change
                         Password</a>

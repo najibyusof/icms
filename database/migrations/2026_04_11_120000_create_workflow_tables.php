@@ -13,7 +13,7 @@ return new class extends Migration {
                 $table->id();
                 $table->string('name')->unique();
                 $table->text('description')->nullable();
-                $table->enum('entity_type', ['course', 'programme'])->index();
+                $table->enum('entity_type', ['course', 'programme', 'jsu'])->index();
                 $table->boolean('is_active')->default(true);
                 $table->json('config')->nullable()->comment('Dynamic workflow configuration');
                 $table->timestamps();

@@ -228,6 +228,70 @@ class WorkflowDefinitionSeeder extends Seeder
                     ],
                 ],
             ],
+            // ── JSU (Jadual Spesifikasi Ujian) ─────────────────────────────────
+            [
+                'name' => 'JSU Approval Workflow',
+                'description' => 'Two-step quality review and approval for examination blueprints (JSU).',
+                'entity_type' => 'jsu',
+                'is_active' => true,
+                'config' => ['version' => 1, 'ui' => 'timeline', 'template_key' => 'jsu.standard.v1'],
+                'steps' => [
+                    [
+                        'title' => 'Quality Review',
+                        'description' => 'Reviewer verifies CLO mapping, bloom distribution, and mark allocation.',
+                        'roles_required' => ['Reviewer', 'reviewer'],
+                        'approval_level' => 1,
+                        'action_type' => 'review',
+                        'allow_rejection' => true,
+                        'requires_comment' => false,
+                    ],
+                    [
+                        'title' => 'Final Approval',
+                        'description' => 'Approver grants final sign-off for JSU publication.',
+                        'roles_required' => ['Approver', 'approver'],
+                        'approval_level' => 2,
+                        'action_type' => 'approve',
+                        'allow_rejection' => true,
+                        'requires_comment' => false,
+                    ],
+                ],
+            ],
+            [
+                'name' => 'JSU Approval Workflow v2',
+                'description' => 'Three-step JSU workflow with programme coordinator gate.',
+                'entity_type' => 'jsu',
+                'is_active' => true,
+                'config' => ['version' => 2, 'ui' => 'timeline', 'template_key' => 'jsu.extended.v2'],
+                'steps' => [
+                    [
+                        'title' => 'Quality Review',
+                        'description' => 'Reviewer checks bloom distribution and blueprint completeness.',
+                        'roles_required' => ['Reviewer', 'reviewer'],
+                        'approval_level' => 1,
+                        'action_type' => 'review',
+                        'allow_rejection' => true,
+                        'requires_comment' => false,
+                    ],
+                    [
+                        'title' => 'Programme Coordinator Endorsement',
+                        'description' => 'Coordinator verifies JSU alignment with programme assessment strategy.',
+                        'roles_required' => ['Programme Coordinator', 'coordinator'],
+                        'approval_level' => 2,
+                        'action_type' => 'review',
+                        'allow_rejection' => true,
+                        'requires_comment' => true,
+                    ],
+                    [
+                        'title' => 'Final Approval',
+                        'description' => 'Approver grants final publication sign-off.',
+                        'roles_required' => ['Approver', 'approver'],
+                        'approval_level' => 3,
+                        'action_type' => 'approve',
+                        'allow_rejection' => true,
+                        'requires_comment' => false,
+                    ],
+                ],
+            ],
         ];
 
         foreach ($definitions as $definition) {

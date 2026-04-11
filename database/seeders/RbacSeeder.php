@@ -57,6 +57,12 @@ class RbacSeeder extends Seeder
         'workflow.review',
         'examination.view',
         'examination.submit',
+        'jsu.view',
+        'jsu.create',
+        'jsu.update',
+        'jsu.submit',
+        'jsu.approve',
+        'jsu.activate',
         'notification.view',
         'integration.sso.validate',
     ];
@@ -78,10 +84,10 @@ class RbacSeeder extends Seeder
             }
 
             $role->syncPermissions(match ($roleName) {
-                'lecturer', 'Lecturer' => ['programme.view', 'course.view', 'course.submit', 'workflow.view', 'workflow.submit', 'group.view', 'examination.view', 'examination.submit', 'notification.view'],
-                'coordinator', 'Programme Coordinator' => ['programme.view', 'programme.update', 'course.view', 'course.submit', 'workflow.view', 'workflow.submit', 'group.view', 'group.create', 'notification.view'],
-                'reviewer', 'Reviewer' => ['workflow.view', 'workflow.review', 'examination.view', 'notification.view'],
-                'approver', 'Approver' => ['workflow.view', 'workflow.review', 'examination.view', 'notification.view'],
+                'lecturer', 'Lecturer' => ['programme.view', 'course.view', 'course.submit', 'workflow.view', 'workflow.submit', 'group.view', 'examination.view', 'examination.submit', 'jsu.view', 'jsu.create', 'jsu.update', 'jsu.submit', 'notification.view'],
+                'coordinator', 'Programme Coordinator' => ['programme.view', 'programme.update', 'course.view', 'course.submit', 'workflow.view', 'workflow.submit', 'group.view', 'group.create', 'jsu.view', 'notification.view'],
+                'reviewer', 'Reviewer' => ['workflow.view', 'workflow.review', 'examination.view', 'jsu.view', 'jsu.approve', 'notification.view'],
+                'approver', 'Approver' => ['workflow.view', 'workflow.review', 'examination.view', 'jsu.view', 'jsu.approve', 'jsu.activate', 'notification.view'],
                 default => [],
             });
         }

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Modules\Course\Models\Course;
+use Modules\Jsu\Models\Jsu;
 use Modules\Programme\Models\Programme;
 use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Models\WorkflowInstance;
@@ -341,6 +342,7 @@ class WorkflowService
         return match (strtolower($entityType)) {
             'course', Course::class => Course::class,
             'programme', Programme::class => Programme::class,
+            'jsu', Jsu::class => Jsu::class,
             default => $entityType,
         };
     }
@@ -350,6 +352,7 @@ class WorkflowService
         return match ($entity::class) {
             Course::class => 'course',
             Programme::class => 'programme',
+            Jsu::class => 'jsu',
             default => throw new \InvalidArgumentException('Unsupported workflow entity type: ' . $entity::class),
         };
     }
