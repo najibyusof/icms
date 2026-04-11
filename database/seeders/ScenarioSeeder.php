@@ -9,7 +9,13 @@ use Illuminate\Support\Facades\Hash;
 use Modules\Course\Models\Course;
 use Modules\Examination\Models\Examination;
 use Modules\Group\Models\AcademicGroup;
+use Modules\Programme\Models\CLOPLOMapping;
 use Modules\Programme\Models\Programme;
+use Modules\Programme\Models\ProgrammeCourse;
+use Modules\Programme\Models\ProgrammePEO;
+use Modules\Programme\Models\ProgrammePLO;
+use Modules\Programme\Models\StudyPlan;
+use Modules\Programme\Models\StudyPlanCourse;
 use Modules\Workflow\Models\Workflow;
 use Modules\Workflow\Models\WorkflowInstance;
 use Modules\Workflow\Models\WorkflowLog;
@@ -26,8 +32,12 @@ class ScenarioSeeder extends Seeder
             [
                 'name' => 'Diploma in Computer Science',
                 'level' => 'Diploma',
+                'description' => 'A diploma programme focused on foundational computing, software development, systems support, and applied digital problem solving.',
+                'accreditation_body' => 'Malaysian Qualifications Agency',
                 'duration_semesters' => 6,
                 'is_active' => true,
+                'programme_chair_id' => $users['coordinator']->id,
+                'status' => 'approved',
             ]
         );
 
@@ -36,8 +46,12 @@ class ScenarioSeeder extends Seeder
             [
                 'name' => 'Diploma in Information Systems',
                 'level' => 'Diploma',
+                'description' => 'A diploma programme covering information systems analysis, database design, enterprise processes, and business technology integration.',
+                'accreditation_body' => 'Malaysian Qualifications Agency',
                 'duration_semesters' => 6,
                 'is_active' => true,
+                'programme_chair_id' => $users['coordinator']->id,
+                'status' => 'in_review',
             ]
         );
 
@@ -164,6 +178,99 @@ class ScenarioSeeder extends Seeder
         foreach ([$courseDraft, $courseStage1Pending, $courseStage2Pending, $courseApproved, $courseRejected] as $course) {
             $this->seedCourseDetailRows($course);
         }
+
+        $this->seedProgrammeAcademicData(
+            programme: $programmeDcs,
+            studyPlanName: 'DCS Standard Study Plan',
+            studyPlanDescription: 'A balanced six-semester delivery plan for diploma students with progressive programming, systems, and software engineering coverage.',
+            plos: [
+                ['code' => 'PLO-1', 'description' => 'Demonstrate foundational knowledge in computing principles, programming, and digital systems.', 'sequence_order' => 1],
+                ['code' => 'PLO-2', 'description' => 'Apply computational thinking and development techniques to solve structured problems.', 'sequence_order' => 2],
+                ['code' => 'PLO-3', 'description' => 'Develop software artefacts using appropriate tools, teamwork, and industry practices.', 'sequence_order' => 3],
+                ['code' => 'PLO-4', 'description' => 'Evaluate solutions with awareness of quality, ethics, and operational constraints.', 'sequence_order' => 4],
+            ],
+            peos: [
+                ['code' => 'PEO-1', 'description' => 'Graduates contribute as competent junior computing professionals in technical teams.', 'sequence_order' => 1],
+                ['code' => 'PEO-2', 'description' => 'Graduates demonstrate growth through lifelong learning, certification, or further study.', 'sequence_order' => 2],
+                ['code' => 'PEO-3', 'description' => 'Graduates communicate effectively and uphold ethical professional conduct.', 'sequence_order' => 3],
+            ],
+            courseAssignments: [
+                [
+                    'course' => $courseDraft,
+                    'year' => 1,
+                    'semester' => 1,
+                    'is_mandatory' => true,
+                    'mappings' => [
+                        ['clo_no' => 1, 'plo_code' => 'PLO-1', 'bloom_level' => 2, 'alignment_notes' => 'Introduces the programme knowledge base through core programming concepts.'],
+                        ['clo_no' => 2, 'plo_code' => 'PLO-2', 'bloom_level' => 3, 'alignment_notes' => 'Builds applied problem-solving using foundational programming exercises.'],
+                        ['clo_no' => 3, 'plo_code' => 'PLO-4', 'bloom_level' => 5, 'alignment_notes' => 'Encourages evaluation of implementation choices and improvements.'],
+                    ],
+                ],
+                [
+                    'course' => $courseStage1Pending,
+                    'year' => 2,
+                    'semester' => 1,
+                    'is_mandatory' => true,
+                    'mappings' => [
+                        ['clo_no' => 1, 'plo_code' => 'PLO-1', 'bloom_level' => 2, 'alignment_notes' => 'Reinforces algorithmic and data-structure concepts.'],
+                        ['clo_no' => 2, 'plo_code' => 'PLO-2', 'bloom_level' => 3, 'alignment_notes' => 'Applies abstract structures to realistic programming tasks.'],
+                        ['clo_no' => 3, 'plo_code' => 'PLO-3', 'bloom_level' => 5, 'alignment_notes' => 'Evaluates implementation trade-offs in team-based development.'],
+                    ],
+                ],
+                [
+                    'course' => $courseApproved,
+                    'year' => 3,
+                    'semester' => 1,
+                    'is_mandatory' => true,
+                    'mappings' => [
+                        ['clo_no' => 1, 'plo_code' => 'PLO-1', 'bloom_level' => 2, 'alignment_notes' => 'Explains software process models and lifecycle controls.'],
+                        ['clo_no' => 2, 'plo_code' => 'PLO-3', 'bloom_level' => 3, 'alignment_notes' => 'Develops engineering artefacts using structured practices.'],
+                        ['clo_no' => 3, 'plo_code' => 'PLO-4', 'bloom_level' => 5, 'alignment_notes' => 'Assesses project quality, risk, and maintainability.'],
+                    ],
+                ],
+            ],
+        );
+
+        $this->seedProgrammeAcademicData(
+            programme: $programmeDis,
+            studyPlanName: 'DIS Standard Study Plan',
+            studyPlanDescription: 'A six-semester curriculum plan emphasising data, systems analysis, and enterprise information workflows.',
+            plos: [
+                ['code' => 'PLO-1', 'description' => 'Demonstrate knowledge of information systems concepts, processes, and technologies.', 'sequence_order' => 1],
+                ['code' => 'PLO-2', 'description' => 'Apply analysis, design, and data management techniques to business contexts.', 'sequence_order' => 2],
+                ['code' => 'PLO-3', 'description' => 'Develop secure and useful information solutions collaboratively.', 'sequence_order' => 3],
+                ['code' => 'PLO-4', 'description' => 'Evaluate information systems decisions with operational, ethical, and user impacts in mind.', 'sequence_order' => 4],
+            ],
+            peos: [
+                ['code' => 'PEO-1', 'description' => 'Graduates contribute to information systems operations, analysis, and support roles.', 'sequence_order' => 1],
+                ['code' => 'PEO-2', 'description' => 'Graduates adapt to evolving digital platforms and organisational needs.', 'sequence_order' => 2],
+                ['code' => 'PEO-3', 'description' => 'Graduates communicate effectively with technical and business stakeholders.', 'sequence_order' => 3],
+            ],
+            courseAssignments: [
+                [
+                    'course' => $courseStage2Pending,
+                    'year' => 2,
+                    'semester' => 2,
+                    'is_mandatory' => true,
+                    'mappings' => [
+                        ['clo_no' => 1, 'plo_code' => 'PLO-1', 'bloom_level' => 2, 'alignment_notes' => 'Builds core database and information modelling knowledge.'],
+                        ['clo_no' => 2, 'plo_code' => 'PLO-2', 'bloom_level' => 3, 'alignment_notes' => 'Applies schema and query design to organisational cases.'],
+                        ['clo_no' => 3, 'plo_code' => 'PLO-4', 'bloom_level' => 5, 'alignment_notes' => 'Evaluates data quality, integrity, and performance choices.'],
+                    ],
+                ],
+                [
+                    'course' => $courseRejected,
+                    'year' => 3,
+                    'semester' => 1,
+                    'is_mandatory' => true,
+                    'mappings' => [
+                        ['clo_no' => 1, 'plo_code' => 'PLO-1', 'bloom_level' => 2, 'alignment_notes' => 'Explains enterprise networking and communication concepts.'],
+                        ['clo_no' => 2, 'plo_code' => 'PLO-3', 'bloom_level' => 3, 'alignment_notes' => 'Applies configuration and troubleshooting steps in collaborative lab scenarios.'],
+                        ['clo_no' => 3, 'plo_code' => 'PLO-4', 'bloom_level' => 5, 'alignment_notes' => 'Evaluates reliability and security implications of network designs.'],
+                    ],
+                ],
+            ],
+        );
 
         $this->seedCourseWorkflow($courseStage1Pending, $users['lecturer1']->id, 'in_progress', 1, [
             ['action' => 'submitted', 'user_id' => $users['lecturer1']->id, 'comment' => 'Submitted for review.', 'step_number' => 1, 'created_at' => Carbon::now()->subDays(2)],
@@ -343,6 +450,115 @@ class ScenarioSeeder extends Seeder
             ['activity' => 'Lab/Tutorial', 'f2f_hours' => 12, 'non_f2f_hours' => 4, 'independent_hours' => 10, 'total_hours' => 26],
             ['activity' => 'Assessment Preparation', 'f2f_hours' => 0, 'non_f2f_hours' => 8, 'independent_hours' => 12, 'total_hours' => 20],
         ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $plos
+     * @param array<int, array<string, mixed>> $peos
+     * @param array<int, array<string, mixed>> $courseAssignments
+     */
+    private function seedProgrammeAcademicData(
+        Programme $programme,
+        string $studyPlanName,
+        string $studyPlanDescription,
+        array $plos,
+        array $peos,
+        array $courseAssignments,
+    ): void {
+        $ploIds = [];
+
+        foreach ($plos as $plo) {
+            $record = ProgrammePLO::query()->updateOrCreate(
+                [
+                    'programme_id' => $programme->id,
+                    'code' => $plo['code'],
+                ],
+                [
+                    'description' => $plo['description'],
+                    'sequence_order' => $plo['sequence_order'],
+                ]
+            );
+
+            $ploIds[$record->code] = $record->id;
+        }
+
+        foreach ($peos as $peo) {
+            ProgrammePEO::query()->updateOrCreate(
+                [
+                    'programme_id' => $programme->id,
+                    'code' => $peo['code'],
+                ],
+                [
+                    'description' => $peo['description'],
+                    'sequence_order' => $peo['sequence_order'],
+                ]
+            );
+        }
+
+        $studyPlan = StudyPlan::query()->updateOrCreate(
+            [
+                'programme_id' => $programme->id,
+                'name' => $studyPlanName,
+            ],
+            [
+                'description' => $studyPlanDescription,
+                'total_years' => max(1, (int) ceil($programme->duration_semesters / 2)),
+                'semesters_per_year' => 2,
+                'semesters_data' => [
+                    'duration_semesters' => $programme->duration_semesters,
+                ],
+                'is_active' => true,
+            ]
+        );
+
+        foreach ($courseAssignments as $assignment) {
+            /** @var Course $course */
+            $course = $assignment['course'];
+
+            ProgrammeCourse::query()->updateOrCreate(
+                [
+                    'programme_id' => $programme->id,
+                    'course_id' => $course->id,
+                    'year' => $assignment['year'],
+                    'semester' => $assignment['semester'],
+                ],
+                [
+                    'is_mandatory' => $assignment['is_mandatory'] ?? true,
+                ]
+            );
+
+            StudyPlanCourse::query()->updateOrCreate(
+                [
+                    'study_plan_id' => $studyPlan->id,
+                    'course_id' => $course->id,
+                    'year' => $assignment['year'],
+                    'semester' => $assignment['semester'],
+                ],
+                [
+                    'is_mandatory' => $assignment['is_mandatory'] ?? true,
+                ]
+            );
+
+            foreach ($assignment['mappings'] ?? [] as $mapping) {
+                $programmePloId = $ploIds[$mapping['plo_code']] ?? null;
+
+                if (! $programmePloId) {
+                    continue;
+                }
+
+                CLOPLOMapping::query()->updateOrCreate(
+                    [
+                        'course_id' => $course->id,
+                        'programme_plo_id' => $programmePloId,
+                        'clo_code' => 'CLO-' . $mapping['clo_no'],
+                    ],
+                    [
+                        'alignment_notes' => $mapping['alignment_notes'] ?? null,
+                        'bloom_level' => $mapping['bloom_level'],
+                    ]
+                );
+            }
+        }
     }
 
     /**

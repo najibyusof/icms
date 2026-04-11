@@ -31,8 +31,12 @@ class CourseController extends Controller
         if (! $request->expectsJson()) {
             $this->authorize('viewAny', Course::class);
 
+            $filters = $request->only(['search', 'status', 'programme_id', 'active']);
+
             return view('courses.index', [
-                'courses' => $this->courseService->paginated(),
+                'courses' => $this->courseService->paginated(filters: $filters),
+                'filters' => $filters,
+                'programmes' => Programme::query()->orderBy('name')->get(['id', 'name']),
             ]);
         }
 

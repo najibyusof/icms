@@ -2,6 +2,18 @@
 
 @section('content')
     <section class="mx-auto max-w-xl rounded-3xl border border-red-200 bg-white/95 p-8 shadow-xl shadow-red-200/60">
+        <div class="mb-6 flex items-center gap-2">
+            <a href="{{ route('dashboard') }}"
+                class="inline-flex items-center gap-1.5 text-sm font-medium text-red-800 transition hover:text-red-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                        clip-rule="evenodd" />
+                </svg>
+                Back to Home
+            </a>
+        </div>
+
         <h1 class="text-3xl font-extrabold text-red-950">Sign In</h1>
         <p class="mt-3 text-sm text-red-900/70">Login with your email or staff ID and password.</p>
 

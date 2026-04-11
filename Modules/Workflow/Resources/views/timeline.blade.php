@@ -1,536 +1,540 @@
-{{-- Workflow Timeline View --}}
 @extends('layouts.app')
 
-@section('content')
-    <div class="container-fluid px-4 py-6">
-        <!-- Header -->
-        <div class="mb-4">
-            <h1 class="h2 mb-0">Workflow Timeline</h1>
-            <p class="text-muted mb-0">
-                @if ($workflow->entity_type === 'Modules\Course\Models\Course')
-                    Course: {{ $workflow->entity?->code }} - {{ $workflow->entity?->name }}
-                @elseif($workflow->entity_type === 'Modules\Programme\Models\Programme')
-                    Programme: {{ $workflow->entity?->code }} - {{ $workflow->entity?->name }}
-                @endif
-            </p>
-        </div>
+@php
+    $entityLabel = match ($workflow->entity_type) {
+        'Modules\\Course\\Models\\Course' => 'Course',
+        'Modules\\Programme\\Models\\Programme' => 'Programme',
+        default => 'Entity',
+    };
 
-        <div class="row">
-            <!-- Timeline Column -->
-            <div class="col-lg-8">
-                <!-- Progress Bar -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted mb-3">Progress</h6>
-                        <div class="progress mb-2" style="height: 24px;">
-                            <div class="progress-bar" role="progressbar"
-                                style="width: {{ $workflow->getProgressPercentage() }}%;"
-                                aria-valuenow="{{ $workflow->getProgressPercentage() }}" aria-valuemin="0"
-                                aria-valuemax="100">
-                                {{ $workflow->getProgressPercentage() }}%
-                            </div>
-                        </div>
-                        <small class="text-muted">
-                            Status:
-                            <span
-                                class="badge
-                            @if ($workflow->isStatus('approved')) bg-success
-                            @elseif($workflow->isStatus('rejected')) bg-danger
-                            @elseif($workflow->isStatus('in_progress')) bg-info
-                            @else bg-secondary @endif">
-                                {{ ucfirst($workflow->status) }}
-                            </span>
-                        </small>
+    $entityTitle = trim(
+        collect([$workflow->entity?->code, $workflow->entity?->name])
+            ->filter()
+            ->join(' - '),
+    );
+
+    $statusClasses = match ($workflow->status) {
+        'approved' => 'bg-emerald-100 text-emerald-700',
+        'rejected' => 'bg-rose-100 text-rose-700',
+        'in_progress' => 'bg-sky-100 text-sky-700',
+        'withdrawn' => 'bg-slate-100 text-slate-700',
+        default => 'bg-red-100 text-red-700',
+    };
+
+    $viewerRoles = auth()->user()?->roles()->pluck('name')->toArray() ?? [];
+    $canAct = $workflow->isStatus('in_progress') && $workflow->currentStep?->userHasRequiredRole($viewerRoles);
+    $stepCount = $workflow->workflow->steps()->count();
+@endphp
+
+@section('content')
+    <div class="ams-shell">
+        <section
+            class="relative overflow-hidden rounded-4xl border border-white/70 bg-[linear-gradient(135deg,rgba(47,6,6,0.97),rgba(126,23,29,0.84))] px-6 py-7 text-white shadow-[0_28px_80px_-34px_rgba(47,6,6,0.68)] sm:px-8">
+            <div class="absolute right-0 top-0 h-44 w-44 rounded-full bg-white/10 blur-3xl"></div>
+            <div class="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div class="max-w-3xl space-y-3">
+                    <span
+                        class="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-red-50/90">
+                        Workflow Timeline
+                    </span>
+                    <div>
+                        <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">{{ $entityLabel }} approval journey
+                        </h1>
+                        <p class="mt-2 text-sm text-red-50/80 sm:text-base">
+                            {{ $entityTitle ?: 'Track every transition, reviewer action, and decision artefact across the workflow lifecycle.' }}
+                        </p>
                     </div>
                 </div>
 
-                <!-- Timeline -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <h6 class="text-uppercase text-muted mb-4">Activity Timeline</h6>
-
-                        @if ($timeline->isNotEmpty())
-                            <div class="timeline">
-                                @foreach ($timeline as $log)
-                                    <div class="timeline-item mb-4">
-                                        <div class="timeline-marker bg-primary text-white rounded-circle"
-                                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                            @if ($log->action === 'approved')
-                                                <i class="bi bi-check-lg"></i>
-                                            @elseif($log->action === 'rejected')
-                                                <i class="bi bi-x-lg"></i>
-                                            @elseif($log->action === 'commented')
-                                                <i class="bi bi-chat-dots"></i>
-                                            @elseif($log->action === 'clarification_requested')
-                                                <i class="bi bi-question-circle"></i>
-                                            @else
-                                                <i class="bi bi-arrow-right"></i>
-                                            @endif
-                                        </div>
-
-                                        <div class="ms-3">
-                                            <h6 class="mb-1">{{ $log->getActionLabel() }}</h6>
-                                            <p class="mb-1 text-muted">
-                                                <strong>{{ $log->user->name }}</strong>
-                                                @if ($log->workflowStep)
-                                                    - {{ $log->workflowStep->title }}
-                                                @endif
-                                            </p>
-                                            @if ($log->comment)
-                                                <div class="bg-light p-2 rounded mt-2 mb-2">
-                                                    <small>{{ $log->comment }}</small>
-                                                </div>
-                                            @endif
-                                            <small
-                                                class="text-muted">{{ $log->created_at->format('M d, Y g:i A') }}</small>
-                                        </div>
-                                    </div>
-
-                                    @if (!$loop->last)
-                                        <div class="ms-5 ps-2 pb-3 border-start border-2"></div>
-                                    @endif
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                                <p class="mt-2">No activity yet</p>
-                            </div>
-                        @endif
+                <div class="grid gap-3 sm:grid-cols-3">
+                    <div class="rounded-3xl border border-white/15 bg-white/10 px-4 py-4 backdrop-blur">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-red-100/80">Progress</p>
+                        <p class="mt-2 text-2xl font-semibold">{{ $workflow->getProgressPercentage() }}%</p>
+                    </div>
+                    <div class="rounded-3xl border border-white/15 bg-white/10 px-4 py-4 backdrop-blur">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-red-100/80">Status</p>
+                        <p class="mt-2 text-lg font-semibold">{{ str($workflow->status)->headline() }}</p>
+                    </div>
+                    <div class="rounded-3xl border border-white/15 bg-white/10 px-4 py-4 backdrop-blur">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-red-100/80">Current Step</p>
+                        <p class="mt-2 text-sm font-semibold">{{ $workflow->currentStep?->title ?? 'No active step' }}</p>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- Sidebar Column -->
-            <div class="col-lg-4">
-                <!-- Workflow Info Card -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">Workflow Information</h6>
+        <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <article class="ams-card p-5">
+                <p class="ams-stat-label">Workflow</p>
+                <p class="mt-3 text-lg font-semibold text-red-950">{{ $workflow->workflow->name }}</p>
+                <p class="mt-2 text-sm text-red-700">Structured approval template in use.</p>
+            </article>
+            <article class="ams-card p-5">
+                <p class="ams-stat-label">Active Stage</p>
+                <p class="mt-3 text-lg font-semibold text-red-950">
+                    {{ $workflow->currentStep?->approval_level ? $workflow->currentStep->approval_level . ' / ' . $stepCount : 'Completed' }}
+                </p>
+                <p class="mt-2 text-sm text-red-700">Current routing position.</p>
+            </article>
+            <article class="ams-card p-5">
+                <p class="ams-stat-label">Submitted</p>
+                <p class="mt-3 text-lg font-semibold text-red-950">{{ $workflow->submittedBy?->name ?? 'Not submitted' }}
+                </p>
+                <p class="mt-2 text-sm text-red-700">
+                    {{ $workflow->submitted_at?->format('M d, Y g:i A') ?? 'Submission has not happened yet.' }}</p>
+            </article>
+            <article class="ams-card p-5">
+                <p class="ams-stat-label">State</p>
+                <span class="ams-badge mt-3 {{ $statusClasses }}">{{ str($workflow->status)->headline() }}</span>
+                <p class="mt-2 text-sm text-red-700">Current workflow outcome state.</p>
+            </article>
+        </section>
+
+        <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div class="space-y-6">
+                <div class="ams-card p-6 sm:p-8">
+                    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p class="ams-stat-label">Progress Meter</p>
+                            <h2 class="mt-2 text-2xl font-semibold text-red-950">Workflow completion</h2>
+                        </div>
+                        <span class="text-sm font-medium text-red-700">{{ $workflow->getProgressPercentage() }}%
+                            complete</span>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <small class="text-uppercase text-muted">Workflow Name</small>
-                            <p class="mb-0"><strong>{{ $workflow->workflow->name }}</strong></p>
-                        </div>
 
-                        <div class="mb-3">
-                            <small class="text-uppercase text-muted">Current Step</small>
-                            <p class="mb-0">
-                                @if ($workflow->currentStep)
-                                    <strong>{{ $workflow->currentStep->title }}</strong>
-                                    <span class="badge bg-info ms-2">{{ $workflow->currentStep->approval_level }} of
-                                        {{ $workflow->workflow->steps()->count() }}</span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </p>
-                        </div>
+                    <div class="h-3 overflow-hidden rounded-full bg-red-100">
+                        <div class="h-full rounded-full bg-[linear-gradient(90deg,#7e171d,#bf3039)]"
+                            style="width: {{ $workflow->getProgressPercentage() }}%"></div>
+                    </div>
+                </div>
 
-                        <div class="mb-3">
-                            <small class="text-uppercase text-muted">Submitted By</small>
-                            <p class="mb-0">
-                                @if ($workflow->submittedBy)
-                                    <strong>{{ $workflow->submittedBy->name }}</strong><br>
-                                    <small
-                                        class="text-muted">{{ $workflow->submitted_at?->format('M d, Y g:i A') }}</small>
-                                @else
-                                    <span class="text-muted">Not submitted yet</span>
-                                @endif
-                            </p>
+                <div class="ams-card p-6 sm:p-8">
+                    <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p class="ams-stat-label">Event Stream</p>
+                            <h2 class="mt-2 text-2xl font-semibold text-red-950">Timeline</h2>
+                        </div>
+                        <p class="text-sm text-red-700">Every action, comment, and decision is preserved in sequence.</p>
+                    </div>
+
+                    @if ($timeline->isNotEmpty())
+                        <div
+                            class="relative space-y-6 before:absolute before:left-[1.1rem] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-red-100">
+                            @foreach ($timeline as $log)
+                                @php
+                                    $iconClasses = match ($log->action) {
+                                        'approved' => 'bg-emerald-100 text-emerald-700',
+                                        'rejected' => 'bg-rose-100 text-rose-700',
+                                        'commented' => 'bg-amber-100 text-amber-700',
+                                        'clarification_requested' => 'bg-sky-100 text-sky-700',
+                                        default => 'bg-red-100 text-red-700',
+                                    };
+
+                                    $icon = match ($log->action) {
+                                        'approved' => 'check',
+                                        'rejected' => 'x',
+                                        'commented' => 'comment',
+                                        'clarification_requested' => 'question',
+                                        default => 'arrow',
+                                    };
+                                @endphp
+                                <article class="relative pl-12">
+                                    <div
+                                        class="absolute left-0 top-1 flex h-9 w-9 items-center justify-center rounded-full {{ $iconClasses }} ring-8 ring-white">
+                                        @if ($icon === 'check')
+                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M16.704 5.29a1 1 0 010 1.42l-7.2 7.2a1 1 0 01-1.415 0l-3-3a1 1 0 111.414-1.42l2.293 2.294 6.493-6.494a1 1 0 011.415 0z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        @elseif ($icon === 'x')
+                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        @elseif ($icon === 'comment')
+                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.146-3.055A6.775 6.775 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zm-11-1a1 1 0 100 2h6a1 1 0 100-2H7z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        @elseif ($icon === 'question')
+                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M18 10A8 8 0 112 10a8 8 0 0116 0zm-7-3a2 2 0 00-2 2 1 1 0 11-2 0 4 4 0 118 0c0 1.098-.5 1.763-1.172 2.252-.596.434-1.25.698-1.25 1.248a1 1 0 11-2 0c0-1.62 1.165-2.402 2.074-3.064.361-.263.348-.422.348-.436a2 2 0 00-2-2zm-1 8a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        @else
+                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M10.293 15.707a1 1 0 010-1.414L13.586 11H5a1 1 0 110-2h8.586l-3.293-3.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        @endif
+                                    </div>
+
+                                    <div
+                                        class="rounded-3xl border border-red-100 bg-white p-5 shadow-[0_20px_45px_-35px_rgba(95,15,19,0.45)]">
+                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div>
+                                                <h3 class="text-lg font-semibold text-red-950">{{ $log->getActionLabel() }}
+                                                </h3>
+                                                <p class="mt-1 text-sm text-red-700">
+                                                    <span
+                                                        class="font-semibold text-red-900">{{ $log->user?->name ?? 'System' }}</span>
+                                                    @if ($log->workflowStep)
+                                                        <span> on {{ $log->workflowStep->title }}</span>
+                                                    @endif
+                                                </p>
+                                            </div>
+                                            <span
+                                                class="text-xs font-medium uppercase tracking-[0.18em] text-red-500">{{ $log->created_at->format('M d, Y g:i A') }}</span>
+                                        </div>
+
+                                        @if ($log->comment)
+                                            <div
+                                                class="mt-4 rounded-2xl border border-red-100 bg-red-50/70 px-4 py-3 text-sm text-red-800">
+                                                {{ $log->comment }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                    @else
+                        <div
+                            class="rounded-3xl border border-dashed border-red-200 bg-red-50/60 px-6 py-12 text-center text-red-700">
+                            No workflow activity has been recorded yet.
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <aside class="space-y-6">
+                <div class="ams-card p-6">
+                    <p class="ams-stat-label">Workflow Information</p>
+                    <div class="mt-5 space-y-5 text-sm text-red-800">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Current step</p>
+                            <p class="mt-2 font-semibold text-red-950">
+                                {{ $workflow->currentStep?->title ?? 'No active step' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Submitted by</p>
+                            <p class="mt-2 font-semibold text-red-950">
+                                {{ $workflow->submittedBy?->name ?? 'Not submitted yet' }}</p>
+                            @if ($workflow->submitted_at)
+                                <p class="mt-1 text-xs text-red-600">{{ $workflow->submitted_at->format('M d, Y g:i A') }}
+                                </p>
+                            @endif
                         </div>
 
                         @if ($workflow->isStatus('approved'))
-                            <div class="mb-3">
-                                <small class="text-uppercase text-muted">Approved By</small>
-                                <p class="mb-0">
-                                    <strong>{{ $workflow->approvedBy->name }}</strong><br>
-                                    <small class="text-muted">{{ $workflow->approved_at?->format('M d, Y g:i A') }}</small>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">Approved by</p>
+                                <p class="mt-2 font-semibold text-red-950">{{ $workflow->approvedBy?->name }}</p>
+                                <p class="mt-1 text-xs text-red-600">{{ $workflow->approved_at?->format('M d, Y g:i A') }}
                                 </p>
                             </div>
                         @endif
 
                         @if ($workflow->isStatus('rejected'))
-                            <div class="mb-3 alert alert-danger">
-                                <small class="text-uppercase"><strong>Rejected By</strong></small>
-                                <p class="mb-1">{{ $workflow->rejectedBy->name }}</p>
-                                <p class="mb-0 text-muted">{{ $workflow->rejection_reason }}</p>
-                                <small
-                                    class="text-muted d-block mt-1">{{ $workflow->rejected_at?->format('M d, Y g:i A') }}</small>
+                            <div class="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-4 text-rose-800">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-rose-600">Rejected by</p>
+                                <p class="mt-2 font-semibold">{{ $workflow->rejectedBy?->name }}</p>
+                                <p class="mt-2 text-sm">{{ $workflow->rejection_reason }}</p>
+                                <p class="mt-2 text-xs text-rose-600">
+                                    {{ $workflow->rejected_at?->format('M d, Y g:i A') }}</p>
                             </div>
                         @endif
                     </div>
                 </div>
 
-                <!-- Action Buttons Card -->
-                @if (
-                    $workflow->isStatus('in_progress') &&
-                        $workflow->currentStep?->userHasRequiredRole(auth()->user()->roles()->pluck('name')->toArray()))
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0">Actions</h6>
-                        </div>
-                        <div class="card-body d-grid gap-2">
-                            <!-- Approve Button -->
-                            <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                                data-bs-target="#approveModal">
-                                <i class="bi bi-check-lg me-2"></i>Approve
-                            </button>
-
+                @if ($canAct)
+                    <div class="ams-card p-6">
+                        <p class="ams-stat-label">Decision Actions</p>
+                        <div class="mt-5 flex flex-col gap-3">
+                            <button type="button" class="ams-button-primary justify-center"
+                                data-modal-target="approveModal">Approve</button>
                             @if ($workflow->currentStep->allow_rejection)
-                                <!-- Reject Button -->
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                    data-bs-target="#rejectModal">
-                                    <i class="bi bi-x-lg me-2"></i>Reject
-                                </button>
+                                <button type="button" class="ams-button-danger justify-center"
+                                    data-modal-target="rejectModal">Reject</button>
                             @endif
-
-                            <!-- Clarification Button -->
-                            <button type="button" class="btn btn-warning" data-bs-toggle="modal"
-                                data-bs-target="#clarificationModal">
-                                <i class="bi bi-question-circle me-2"></i>Request Clarification
-                            </button>
-
-                            <!-- Comment Button -->
-                            <button type="button" class="btn btn-info" data-bs-toggle="modal"
-                                data-bs-target="#commentModal">
-                                <i class="bi bi-chat-dots me-2"></i>Add Comment
-                            </button>
+                            <button type="button" class="ams-button-secondary justify-center"
+                                data-modal-target="clarificationModal">Request clarification</button>
+                            <button type="button" class="ams-button-secondary justify-center"
+                                data-modal-target="commentModal">Add comment</button>
                         </div>
                     </div>
                 @endif
 
                 @if ($workflow->canEdit())
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-body d-grid gap-2">
-                            <!-- Submit Button -->
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                data-bs-target="#submitModal">
-                                <i class="bi bi-send me-2"></i>Submit for Approval
-                            </button>
-
-                            <!-- Withdraw Button -->
-                            <button type="button" class="btn btn-outline-secondary" onclick="confirmWithdraw()">
-                                <i class="bi bi-arrow-counterclockwise me-2"></i>Withdraw
-                            </button>
+                    <div class="ams-card p-6">
+                        <p class="ams-stat-label">Owner Actions</p>
+                        <div class="mt-5 flex flex-col gap-3">
+                            <button type="button" class="ams-button-primary justify-center"
+                                data-modal-target="submitModal">Submit for approval</button>
+                            <button type="button" class="ams-button-secondary justify-center"
+                                id="withdrawWorkflow">Withdraw</button>
                         </div>
                     </div>
                 @endif
-            </div>
-        </div>
+            </aside>
+        </section>
     </div>
 
-    <!-- Modals -->
+    <div id="workflowToastContainer" class="fixed right-4 top-4 z-60 space-y-3"></div>
 
-    <!-- Submit Modal -->
-    <div class="modal fade" id="submitModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Submit for Approval</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div id="submitModal" class="ams-modal">
+        <div class="ams-modal-panel">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-red-950">Submit for approval</h2>
+                    <p class="mt-1 text-sm text-red-700">Add an optional note for the first reviewer.</p>
                 </div>
-                <form id="submitForm">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="submitComment" class="form-label">Comment (Optional)</label>
-                            <textarea class="form-control" id="submitComment" name="comment" rows="3"
-                                placeholder="Add any additional information..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
+                <button type="button" class="text-red-400 transition hover:text-red-700"
+                    data-close-modal>&times;</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Approve Modal -->
-    <div class="modal fade" id="approveModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Approve</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <form id="submitForm" class="mt-6 space-y-4">
+                @csrf
+                <label class="space-y-2 text-sm font-medium text-red-900">
+                    <span>Comment</span>
+                    <textarea id="submitComment" class="ams-textarea" rows="4" placeholder="Add any context for reviewers."></textarea>
+                </label>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="ams-button-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="ams-button-primary">Submit</button>
                 </div>
-                <form id="approveForm">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="approveComment" class="form-label">Comment (Optional)</label>
-                            <textarea class="form-control" id="approveComment" name="comment" rows="3"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Approve</button>
-                    </div>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
 
-    <!-- Reject Modal -->
-    <div class="modal fade" id="rejectModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Reject</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div id="approveModal" class="ams-modal">
+        <div class="ams-modal-panel">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-red-950">Approve stage</h2>
+                    <p class="mt-1 text-sm text-red-700">Record an optional note before advancing the workflow.</p>
                 </div>
-                <form id="rejectForm">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="rejectReason" class="form-label">Reason for Rejection <span
-                                    class="text-danger">*</span></label>
-                            <textarea class="form-control" id="rejectReason" name="reason" rows="4" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Reject</button>
-                    </div>
-                </form>
+                <button type="button" class="text-red-400 transition hover:text-red-700"
+                    data-close-modal>&times;</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Clarification Modal -->
-    <div class="modal fade" id="clarificationModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Request Clarification</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <form id="approveForm" class="mt-6 space-y-4">
+                @csrf
+                <label class="space-y-2 text-sm font-medium text-red-900">
+                    <span>Comment</span>
+                    <textarea id="approveComment" class="ams-textarea" rows="4"></textarea>
+                </label>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="ams-button-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="ams-button-primary">Approve</button>
                 </div>
-                <form id="clarificationForm">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="clarificationComment" class="form-label">Request Details <span
-                                    class="text-danger">*</span></label>
-                            <textarea class="form-control" id="clarificationComment" name="comment" rows="4" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning">Request</button>
-                    </div>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
 
-    <!-- Comment Modal -->
-    <div class="modal fade" id="commentModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Comment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div id="rejectModal" class="ams-modal">
+        <div class="ams-modal-panel">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-red-950">Reject workflow</h2>
+                    <p class="mt-1 text-sm text-red-700">A reason is required to send this item back.</p>
                 </div>
-                <form id="commentForm">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="commentText" class="form-label">Comment <span
-                                    class="text-danger">*</span></label>
-                            <textarea class="form-control" id="commentText" name="comment" rows="4" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Comment</button>
-                    </div>
-                </form>
+                <button type="button" class="text-red-400 transition hover:text-red-700"
+                    data-close-modal>&times;</button>
             </div>
+            <form id="rejectForm" class="mt-6 space-y-4">
+                @csrf
+                <label class="space-y-2 text-sm font-medium text-red-900">
+                    <span>Reason for rejection</span>
+                    <textarea id="rejectReason" class="ams-textarea" rows="4" required></textarea>
+                </label>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="ams-button-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="ams-button-danger">Reject</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setupFormHandlers();
-        });
+    <div id="clarificationModal" class="ams-modal">
+        <div class="ams-modal-panel">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-red-950">Request clarification</h2>
+                    <p class="mt-1 text-sm text-red-700">Explain what needs to be revised or clarified.</p>
+                </div>
+                <button type="button" class="text-red-400 transition hover:text-red-700"
+                    data-close-modal>&times;</button>
+            </div>
+            <form id="clarificationForm" class="mt-6 space-y-4">
+                @csrf
+                <label class="space-y-2 text-sm font-medium text-red-900">
+                    <span>Request details</span>
+                    <textarea id="clarificationComment" class="ams-textarea" rows="4" required></textarea>
+                </label>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="ams-button-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="ams-button-primary">Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        function setupFormHandlers() {
-            // Submit Form
-            document.getElementById('submitForm')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-                submitWorkflow();
-            });
-
-            // Approve Form
-            document.getElementById('approveForm')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-                approveWorkflow();
-            });
-
-            // Reject Form
-            document.getElementById('rejectForm')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-                rejectWorkflow();
-            });
-
-            // Clarification Form
-            document.getElementById('clarificationForm')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-                requestClarification();
-            });
-
-            // Comment Form
-            document.getElementById('commentForm')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-                addComment();
-            });
-        }
-
-        function submitWorkflow() {
-            const comment = document.getElementById('submitComment').value;
-            makeRequest('{{ route('workflows.submit', $workflow) }}', 'POST', {
-                comment
-            }, 'Submitted for approval');
-        }
-
-        function approveWorkflow() {
-            const comment = document.getElementById('approveComment').value;
-            makeRequest('{{ route('workflows.approve', $workflow) }}', 'POST', {
-                comment
-            }, 'Approved successfully');
-        }
-
-        function rejectWorkflow() {
-            const reason = document.getElementById('rejectReason').value;
-            makeRequest('{{ route('workflows.reject', $workflow) }}', 'POST', {
-                reason
-            }, 'Rejected successfully');
-        }
-
-        function requestClarification() {
-            const comment = document.getElementById('clarificationComment').value;
-            makeRequest('{{ route('workflows.clarification', $workflow) }}', 'POST', {
-                comment
-            }, 'Clarification requested');
-        }
-
-        function addComment() {
-            const comment = document.getElementById('commentText').value;
-            makeRequest('{{ route('workflows.comment', $workflow) }}', 'POST', {
-                comment
-            }, 'Comment added', true);
-        }
-
-        function confirmWithdraw() {
-            if (confirm('Are you sure you want to withdraw this workflow?')) {
-                makeRequest('{{ route('workflows.withdraw', $workflow) }}', 'POST', {}, 'Workflow withdrawn');
-            }
-        }
-
-        function makeRequest(url, method, data, successMessage, reloadTimeline = false) {
-            const token = document.querySelector('meta[name="csrf-token"]').content;
-
-            fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRF-TOKEN': token,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => {
-                    if (!response.ok) return Promise.reject(response);
-                    return response.json();
-                })
-                .then(result => {
-                    showSuccess(successMessage);
-                    closeModals();
-
-                    if (reloadTimeline || true) {
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                })
-                .catch(error => {
-                    error.json().then(data => {
-                        showError(data.message || 'An error occurred');
-                    });
-                });
-        }
-
-        function showSuccess(message) {
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
-            alert.style.top = '20px';
-            alert.style.right = '20px';
-            alert.style.zIndex = '9999';
-            alert.innerHTML = `
-        <i class="bi bi-check-circle me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-            document.body.appendChild(alert);
-
-            setTimeout(() => alert.remove(), 5000);
-        }
-
-        function showError(message) {
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-            alert.style.top = '20px';
-            alert.style.right = '20px';
-            alert.style.zIndex = '9999';
-            alert.innerHTML = `
-        <i class="bi bi-exclamation-circle me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-            document.body.appendChild(alert);
-        }
-
-        function closeModals() {
-            document.getElementById('submitModal')?.querySelector('.btn-close').click();
-            document.getElementById('approveModal')?.querySelector('.btn-close').click();
-            document.getElementById('rejectModal')?.querySelector('.btn-close').click();
-            document.getElementById('clarificationModal')?.querySelector('.btn-close').click();
-            document.getElementById('commentModal')?.querySelector('.btn-close').click();
-        }
-    </script>
-
-    <style>
-        .timeline {
-            position: relative;
-            padding-left: 20px;
-        }
-
-        .timeline-item {
-            position: relative;
-            padding-left: 50px;
-            min-height: 50px;
-        }
-
-        .timeline-marker {
-            position: absolute;
-            left: -30px;
-            top: 0;
-        }
-
-        .border-start {
-            border-left: 2px solid #dee2e6 !important;
-        }
-
-        .timeline-item:first-child .timeline-marker {
-            background-color: #0d6efd !important;
-        }
-
-        .timeline-item .timeline-marker {
-            background-color: #6c757d !important;
-        }
-
-        .timeline-item:last-child .ms-5.ps-2.pb-3 {
-            display: none;
-        }
-    </style>
+    <div id="commentModal" class="ams-modal">
+        <div class="ams-modal-panel">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-red-950">Add comment</h2>
+                    <p class="mt-1 text-sm text-red-700">Attach a review note without changing workflow status.</p>
+                </div>
+                <button type="button" class="text-red-400 transition hover:text-red-700"
+                    data-close-modal>&times;</button>
+            </div>
+            <form id="commentForm" class="mt-6 space-y-4">
+                @csrf
+                <label class="space-y-2 text-sm font-medium text-red-900">
+                    <span>Comment</span>
+                    <textarea id="commentText" class="ams-textarea" rows="4" required></textarea>
+                </label>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="ams-button-secondary" data-close-modal>Cancel</button>
+                    <button type="submit" class="ams-button-primary">Add comment</button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalTriggers = document.querySelectorAll('[data-modal-target]');
+            const closeButtons = document.querySelectorAll('[data-close-modal]');
+            const modals = document.querySelectorAll('.ams-modal');
+
+            modalTriggers.forEach((trigger) => {
+                trigger.addEventListener('click', () => openModal(trigger.dataset.modalTarget));
+            });
+
+            closeButtons.forEach((button) => {
+                button.addEventListener('click', () => closeModal(button.closest('.ams-modal')));
+            });
+
+            modals.forEach((modal) => {
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) {
+                        closeModal(modal);
+                    }
+                });
+            });
+
+            document.getElementById('submitForm')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                makeRequest('{{ route('workflows.submit', $workflow) }}', {
+                    comment: document.getElementById('submitComment').value
+                }, 'Submitted for approval');
+            });
+
+            document.getElementById('approveForm')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                makeRequest('{{ route('workflows.approve', $workflow) }}', {
+                    comment: document.getElementById('approveComment').value
+                }, 'Approved successfully');
+            });
+
+            document.getElementById('rejectForm')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                makeRequest('{{ route('workflows.reject', $workflow) }}', {
+                    reason: document.getElementById('rejectReason').value
+                }, 'Rejected successfully');
+            });
+
+            document.getElementById('clarificationForm')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                makeRequest('{{ route('workflows.clarification', $workflow) }}', {
+                    comment: document.getElementById('clarificationComment').value
+                }, 'Clarification requested');
+            });
+
+            document.getElementById('commentForm')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                makeRequest('{{ route('workflows.comment', $workflow) }}', {
+                    comment: document.getElementById('commentText').value
+                }, 'Comment added');
+            });
+
+            document.getElementById('withdrawWorkflow')?.addEventListener('click', () => {
+                if (window.confirm('Are you sure you want to withdraw this workflow?')) {
+                    makeRequest('{{ route('workflows.withdraw', $workflow) }}', {}, 'Workflow withdrawn');
+                }
+            });
+
+            function openModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (!modal) {
+                    return;
+                }
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closeModal(modal) {
+                if (!modal) {
+                    return;
+                }
+
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            function closeAllModals() {
+                modals.forEach((modal) => closeModal(modal));
+            }
+
+            async function makeRequest(url, data, successMessage) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message ||
+                            'An error occurred while processing the workflow action.');
+                    }
+
+                    showToast(successMessage, 'success');
+                    closeAllModals();
+                    window.setTimeout(() => window.location.reload(), 1200);
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+            }
+
+            function showToast(message, type) {
+                const container = document.getElementById('workflowToastContainer');
+                const toast = document.createElement('div');
+                const classes = type === 'success' ?
+                    'border-emerald-200 bg-emerald-50 text-emerald-800' :
+                    'border-rose-200 bg-rose-50 text-rose-800';
+
+                toast.className = `rounded-2xl border px-4 py-3 text-sm shadow-lg ${classes}`;
+                toast.textContent = message;
+
+                container.appendChild(toast);
+                window.setTimeout(() => {
+                    toast.remove();
+                }, 4000);
+            }
+        });
+    </script>
+@endpush

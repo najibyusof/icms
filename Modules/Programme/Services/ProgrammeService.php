@@ -18,14 +18,45 @@ use Modules\Workflow\Services\WorkflowService;
 class ProgrammeService
 {
     /**
+     * @param array<string, mixed> $filters
+     * @return Collection<int, Programme>
+     */
+    public function filteredList(array $filters = []): Collection
+    {
+        $query = Programme::query()
+            ->with(['programmeChair:id,name,email'])
+            ->withCount(['courses', 'groups', 'programmePLOs', 'programmePEOs', 'studyPlans'])
+            ->orderBy('name');
+
+        if ($search = trim((string) ($filters['search'] ?? ''))) {
+            $query->where(function ($builder) use ($search): void {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('accreditation_body', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status = $filters['status'] ?? null) {
+            $query->where('status', $status);
+        }
+
+        if ($level = $filters['level'] ?? null) {
+            $query->where('level', $level);
+        }
+
+        if (($filters['active'] ?? null) !== null && $filters['active'] !== '') {
+            $query->where('is_active', filter_var($filters['active'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        return $query->get();
+    }
+
+    /**
      * @return Collection<int, Programme>
      */
     public function list(): Collection
     {
-        return Programme::query()
-            ->withCount(['courses', 'groups', 'programmePLOs', 'programmePEOs', 'studyPlans'])
-            ->orderBy('name')
-            ->get();
+        return $this->filteredList();
     }
 
     /**

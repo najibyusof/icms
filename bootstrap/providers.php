@@ -7,5 +7,6 @@ return [
     App\Providers\ModuleServiceProvider::class,
     Laravel\Socialite\SocialiteServiceProvider::class,
     Modules\Group\Providers\GroupServiceProvider::class,
+    Modules\Programme\Providers\ProgrammeServiceProvider::class,
     Modules\Workflow\Providers\WorkflowServiceProvider::class,
 ];

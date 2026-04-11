@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Modules\Programme\Http\Requests\StoreCLOPLOMappingRequest;
 use Modules\Programme\Http\Requests\StoreProgrammePEORequest;
@@ -40,11 +41,20 @@ class ProgrammeController extends Controller
     /**
      * Display list of programmes
      */
-    public function index(): View
+    public function index(Request $request): JsonResponse|View
     {
-        $programmes = $this->programmeService->list();
+        $filters = $request->only(['search', 'status', 'level', 'active']);
 
-        return view('programme::index', compact('programmes'));
+        if ($request->expectsJson()) {
+            return response()->json($this->programmeService->filteredList($filters));
+        }
+
+        $programmes = $this->programmeService->filteredList($filters);
+
+        return view('programme::index', [
+            'programmes' => $programmes,
+            'filters' => $filters,
+        ]);
     }
 
     /**

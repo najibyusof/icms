@@ -4,6 +4,7 @@ namespace Modules\Group\Services;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Modules\Group\Models\AcademicGroup;
@@ -11,15 +12,46 @@ use Modules\Group\Models\AcademicGroup;
 class GroupService
 {
     /**
+     * @param array<string, mixed> $filters
+     * @return Collection<int, AcademicGroup>
+     */
+    public function filteredList(array $filters = []): Collection
+    {
+        $query = AcademicGroup::query()
+            ->with(['programme', 'coordinator', 'courses', 'users'])
+            ->orderByDesc('intake_year')
+            ->orderBy('semester')
+            ->orderBy('name');
+
+        if ($search = trim((string) ($filters['search'] ?? ''))) {
+            $query->where(function (Builder $builder) use ($search): void {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('programme', fn (Builder $programmeQuery) => $programmeQuery->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"))
+                    ->orWhereHas('coordinator', fn (Builder $coordinatorQuery) => $coordinatorQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($programmeId = $filters['programme_id'] ?? null) {
+            $query->where('programme_id', $programmeId);
+        }
+
+        if ($intakeYear = $filters['intake_year'] ?? null) {
+            $query->where('intake_year', $intakeYear);
+        }
+
+        if (($filters['active'] ?? null) !== null && $filters['active'] !== '') {
+            $query->where('is_active', filter_var($filters['active'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        return $query->get();
+    }
+
+    /**
      * @return Collection<int, AcademicGroup>
      */
     public function list(): Collection
     {
-        return AcademicGroup::query()
-            ->with(['programme', 'coordinator', 'courses', 'users'])
-            ->orderByDesc('intake_year')
-            ->orderBy('name')
-            ->get();
+        return $this->filteredList();
     }
 
     /**
@@ -31,7 +63,9 @@ class GroupService
             'programme:id,code,name',
             'coordinator:id,name,email',
             'courses:id,code,name,credit_hours',
-            'users' => fn($q) => $q->select('id', 'name', 'email', 'staff_id')->withPivot(['role']),
+            'users' => fn ($q) => $q
+                ->select('users.id', 'users.name', 'users.email', 'users.staff_id')
+                ->withPivot(['role']),
         ])->findOrFail($group->id);
     }
 
@@ -136,7 +170,7 @@ class GroupService
         $query = $group->users();
 
         if ($role) {
-            $query->where('role', $role);
+            $query->wherePivot('role', $role);
         }
 
         return $query->get();
@@ -147,7 +181,7 @@ class GroupService
      */
     public function getAvailableCourses(AcademicGroup $group)
     {
-        $assignedCourseIds = $group->courses()->pluck('id')->toArray();
+        $assignedCourseIds = $group->courses()->pluck('courses.id')->toArray();
 
         return \Modules\Course\Models\Course::where('programme_id', $group->programme_id)
             ->where('is_active', true)
@@ -161,7 +195,7 @@ class GroupService
      */
     public function getAvailableUsers(AcademicGroup $group)
     {
-        $assignedUserIds = $group->users()->pluck('id')->toArray();
+        $assignedUserIds = $group->users()->pluck('users.id')->toArray();
 
         return User::whereNotIn('id', $assignedUserIds)
             ->orderBy('name')

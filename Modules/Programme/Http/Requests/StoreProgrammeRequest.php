@@ -20,8 +20,11 @@ class StoreProgrammeRequest extends FormRequest
             'code' => ['required', 'string', 'max:30', 'unique:programmes,code'],
             'name' => ['required', 'string', 'max:255'],
             'level' => ['required', 'string', 'max:50'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'accreditation_body' => ['nullable', 'string', 'max:100'],
             'duration_semesters' => ['required', 'integer', 'min:1', 'max:20'],
             'is_active' => ['sometimes', 'boolean'],
+            'programme_chair_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

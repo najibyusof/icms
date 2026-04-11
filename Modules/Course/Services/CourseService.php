@@ -26,12 +26,36 @@ class CourseService
             ->get();
     }
 
-    public function paginated(int $perPage = 12): LengthAwarePaginator
+    /**
+     * @param array<string, mixed> $filters
+     */
+    public function paginated(int $perPage = 12, array $filters = []): LengthAwarePaginator
     {
-        return Course::query()
+        $query = Course::query()
             ->with(['programme', 'lecturer', 'resourcePerson', 'vetter'])
-            ->orderBy('code')
-            ->paginate($perPage);
+            ->orderBy('code');
+
+        if ($search = trim((string) ($filters['search'] ?? ''))) {
+            $query->where(function ($builder) use ($search): void {
+                $builder->where('code', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhereHas('programme', fn ($programmeQuery) => $programmeQuery->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status = $filters['status'] ?? null) {
+            $query->where('status', $status);
+        }
+
+        if ($programmeId = $filters['programme_id'] ?? null) {
+            $query->where('programme_id', $programmeId);
+        }
+
+        if (($filters['active'] ?? null) !== null && $filters['active'] !== '') {
+            $query->where('is_active', filter_var($filters['active'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        return $query->paginate($perPage)->withQueryString();
     }
 
     public function create(array $payload): Course

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Modules\Group\Http\Requests\AssignUsersToGroupRequest;
 use Modules\Group\Http\Requests\RemoveUserFromGroupRequest;
@@ -28,13 +29,34 @@ class GroupController extends Controller
     /**
      * Display list of groups
      */
-    public function index(): View
+    public function index(Request $request): JsonResponse|View
     {
         $this->authorize('viewAny', AcademicGroup::class);
 
-        $groups = $this->groupService->list();
+        $filters = $request->only(['search', 'programme_id', 'intake_year', 'active']);
+        $groups = $this->groupService->filteredList($filters);
 
-        return view('group::index', compact('groups'));
+        if ($request->expectsJson()) {
+            return response()->json($groups);
+        }
+
+        $programmeOptions = \Modules\Programme\Models\Programme::query()
+            ->orderBy('name')
+            ->get(['id', 'code', 'name']);
+
+        $stats = [
+            'total' => $groups->count(),
+            'active' => $groups->where('is_active', true)->count(),
+            'members' => $groups->sum(fn ($group) => $group->users->count()),
+            'courses' => $groups->sum(fn ($group) => $group->courses->count()),
+        ];
+
+        return view('group::index', [
+            'groups' => $groups,
+            'filters' => $filters,
+            'programmeOptions' => $programmeOptions,
+            'stats' => $stats,
+        ]);
     }
 
     /**
@@ -61,7 +83,7 @@ class GroupController extends Controller
         $group = $this->groupService->getWithDetails($group);
         $stats = $this->groupService->getGroupStats($group);
         $availableCourses = $this->groupService->getAvailableCourses($group);
-        $assignedCourses = $group->courses()->get(['id', 'code', 'name', 'credit_hours']);
+        $assignedCourses = $group->courses()->get(['courses.id', 'courses.code', 'courses.name', 'courses.credit_hours']);
         $availableUsers = $this->groupService->getAvailableUsers($group);
         $assignedUsers = $this->groupService->getMembers($group);
 

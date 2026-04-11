@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             RbacSeeder::class,
             WorkflowDefinitionSeeder::class,
             ScenarioSeeder::class,
+            ProgrammeManagementSeeder::class,
+            JsuSampleSeeder::class,
         ]);
 
         User::query()->firstOrCreate([
