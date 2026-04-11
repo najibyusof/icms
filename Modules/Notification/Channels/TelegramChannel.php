@@ -21,9 +21,19 @@ class TelegramChannel
             return;
         }
 
+        $chatId = method_exists($notifiable, 'routeNotificationFor')
+            ? $notifiable->routeNotificationFor(static::class)
+            : null;
+
+        $chatId ??= config('services.telegram.chat_id');
+
+        if (empty($chatId)) {
+            return;
+        }
+
         Http::timeout(4)
             ->post(sprintf('https://api.telegram.org/bot%s/sendMessage', config('services.telegram.bot_token')), [
-                'chat_id' => config('services.telegram.chat_id'),
+                'chat_id' => $chatId,
                 'text' => $payload['text'],
             ]);
     }

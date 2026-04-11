@@ -3,10 +3,17 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\Notification\Events\EntityApproved;
+use Modules\Notification\Events\EntityRejected;
+use Modules\Notification\Events\EntitySubmitted;
+use Modules\Notification\Listeners\DispatchEntityDecisionFromWorkflow;
+use Modules\Notification\Listeners\DispatchEntitySubmittedFromWorkflow;
+use Modules\Notification\Listeners\SendDatabaseNotification;
+use Modules\Notification\Listeners\SendMailNotification;
+use Modules\Notification\Listeners\SendPushNotification;
+use Modules\Notification\Listeners\SendTelegramNotification;
 use Modules\Workflow\Events\WorkflowDecisionRecorded;
 use Modules\Workflow\Events\WorkflowSubmitted;
-use Modules\Workflow\Listeners\SendWorkflowDecisionNotifications;
-use Modules\Workflow\Listeners\SendWorkflowSubmittedNotifications;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -15,10 +22,28 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
         WorkflowSubmitted::class => [
-            SendWorkflowSubmittedNotifications::class,
+            DispatchEntitySubmittedFromWorkflow::class,
         ],
         WorkflowDecisionRecorded::class => [
-            SendWorkflowDecisionNotifications::class,
+            DispatchEntityDecisionFromWorkflow::class,
+        ],
+        EntitySubmitted::class => [
+            SendDatabaseNotification::class,
+            SendMailNotification::class,
+            SendTelegramNotification::class,
+            SendPushNotification::class,
+        ],
+        EntityApproved::class => [
+            SendDatabaseNotification::class,
+            SendMailNotification::class,
+            SendTelegramNotification::class,
+            SendPushNotification::class,
+        ],
+        EntityRejected::class => [
+            SendDatabaseNotification::class,
+            SendMailNotification::class,
+            SendTelegramNotification::class,
+            SendPushNotification::class,
         ],
     ];
 
